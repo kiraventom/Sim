@@ -1,0 +1,40 @@
+<Window 
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:Sim.View"
+    mc:Ignorable="d"
+    x:Class="Sim.View.MainWindow"
+    x:DataType="local:MainWindow"
+    Title="Sim"
+    WindowState="FullScreen"
+    CanResize="False"
+    Background="#202020">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <Image 
+            Grid.Row="0"
+            Grid.Column="0"
+            Width="{Binding ImageWidth}"
+            Height="{Binding ImageHeight}"
+            Name="DisplayImage" 
+            RenderOptions.BitmapInterpolationMode="None" />
+
+        <ListBox 
+            Grid.Row="1" 
+            Grid.Column="0" 
+            Background="#222222"
+            Foreground="#DDDDDD"
+            ItemsSource="{Binding LogMessages}" />
+    </Grid>
+</Window>
