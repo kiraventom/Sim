@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Positions = System.Collections.Generic.IReadOnlyDictionary<int, Sim.Geometry.PointI>;
 
 namespace Sim.Model;
 
@@ -15,8 +14,6 @@ public class World
     private ILogger<World> Logger { get; }
     private Map Map { get; }
     private PositionsCache Cache { get; }
-
-    public Size Size => Map.Size;
 
     public World(ILogger<World> logger, Map map, PositionsCache cache, WorldSettings settings)
     {
@@ -44,10 +41,10 @@ public class World
         }
     }
 
-    public Positions GetPositions() => Cache.GetPositions();
-
     internal void Tick()
     {
+        const int ATTEMPTS_COUNT = 10;
+
         foreach (var human in _humans.Values)
         {
             for (int attempt = 0; ; ++attempt)
@@ -59,9 +56,9 @@ public class World
                 if (Map.TryMove(human.Id, offset))
                     break;
 
-                if (attempt == 10)
+                if (attempt == ATTEMPTS_COUNT)
                 {
-                    Logger.LogError("Failed to move {Id}, skipping", human.Id);
+                    Logger.LogError("Failed to move {Id} after {Att} attempts, skipping", human.Id, ATTEMPTS_COUNT);
                     break;
                 }
             }

@@ -24,9 +24,24 @@ public class HostBuilder
 
     public static HostBuilder Create() => new HostBuilder();
 
-    public HostBuilder Settings(WorldSettings s)
+    public HostBuilder UseCommandLineArgs()
     {
-        _settings = s;
+        var args = Environment.GetCommandLineArgs();
+        int humans = _settings.HumansCount;
+        int width = _settings.MapWidth;
+        int height = _settings.MapHeight;
+
+        for (int i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i] == "--humans" && int.TryParse(args[i + 1], out int h)) 
+                humans = h;
+            else if (args[i] == "--width" && int.TryParse(args[i + 1], out int w)) 
+                width = w;
+            else if (args[i] == "--height" && int.TryParse(args[i + 1], out int ht)) 
+                height = ht;
+        }
+
+        _settings = new WorldSettings(humans, width, height);
         return this;
     }
 
@@ -40,8 +55,10 @@ public class HostBuilder
             var logFilePath = Path.Combine(logsDirPath, $"{PROJECT_NAME}.log");
 
             l.MinimumLevel.Debug()
+                .WriteTo.Console()
                 .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day)
-                .WriteTo.Observers(events => events.Subscribe(new UIObserver(logAction)));
+                /* .WriteTo.Observers(events => events.Subscribe(new UIObserver(logAction))) */
+                ;
         });
 
         return this;
@@ -70,7 +87,10 @@ public class HostBuilder
             .AddSingleton<World>()
             .AddHostedService<WorldHost>();
 
-        return _builder.Build();
+        var host = _builder.Build();
+
+        Log.Logger = host.Services.GetRequiredService<ILogger>();
+        return host;
     }
 }
 

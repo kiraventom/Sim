@@ -1,4 +1,4 @@
 namespace Sim.Model;
 
-public record WorldSettings(int HumansCount = 100, int MapWidth = 10000, int MapHeight = 10000);
+public record WorldSettings(int HumansCount = 10, int MapWidth = 200, int MapHeight = 200);
 

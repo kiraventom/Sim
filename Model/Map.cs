@@ -21,19 +21,19 @@ public class Map(ILogger<Map> logger, WorldSettings settings)
     {
         if (this[pos] == SpecialCell.INVALID)
         {
-            logger.LogDebug("Can't place {Id} to {Pos}, {Pos} is invalid", id, pos, pos);
+            logger.LogTrace("Can't place {Id} to {Pos}, {Pos} is invalid", id, pos, pos);
             return false;
         }
 
         if (this[pos] != SpecialCell.EMPTY)
         {
-            logger.LogDebug("Can't place {Id} to {Pos}, {Pos} is not empty", id, pos, pos);
+            logger.LogTrace("Can't place {Id} to {Pos}, {Pos} is not empty", id, pos, pos);
             return false;
         }
 
         if (_positions.TryGetValue(id, out var existingPos))
         {
-            logger.LogDebug("Can't place {Id} to {Pos}, {Id} is already places at {ExistingPos}", id, pos, id, existingPos);
+            logger.LogTrace("Can't place {Id} to {Pos}, {Id} is already places at {ExistingPos}", id, pos, id, existingPos);
             return false;
         }
 
@@ -46,7 +46,7 @@ public class Map(ILogger<Map> logger, WorldSettings settings)
     {
         if (!_positions.TryGetValue(id, out var oldPos))
         {
-            logger.LogDebug("Can't move {Id}, {Id} is not placed on map", id, id);
+            logger.LogTrace("Can't move {Id}, {Id} is not placed on map", id, id);
             return false;
         }
 
@@ -54,13 +54,13 @@ public class Map(ILogger<Map> logger, WorldSettings settings)
 
         if (this[newPos] == SpecialCell.INVALID)
         {
-            logger.LogDebug("Can't move {Id} to {Pos}, {Pos} is invalid", id, newPos, newPos);
+            logger.LogTrace("Can't move {Id} to {Pos}, {Pos} is invalid", id, newPos, newPos);
             return false;
         }
 
         if (this[newPos] != SpecialCell.EMPTY)
         {
-            logger.LogDebug("Can't move {Id} from {OldPos} to {NewPos}, {NewPos} is occupied by {OccId}", id, oldPos, newPos, newPos, this[newPos]);
+            logger.LogTrace("Can't move {Id} from {OldPos} to {NewPos}, {NewPos} is occupied by {OccId}", id, oldPos, newPos, newPos, this[newPos]);
             return false;
         }
 
