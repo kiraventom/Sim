@@ -14,6 +14,8 @@ public class Renderer
     private readonly WriteableBitmap _bitmap;
     private readonly DispatcherTimer _timer;
 
+    private readonly SKPaint _humanPaint = new SKPaint { Color = SKColors.LightGreen };
+
     private Sim.Geometry.Point RenderScale = new Sim.Geometry.Point(1.0, 1.0);
 
     private const int FPS = 60;
@@ -40,6 +42,16 @@ public class Renderer
 
     public void SetRenderScale(Sim.Geometry.Point renderScale) => RenderScale = renderScale;
 
+    public void ZoomIn()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void ZoomOut()
+    {
+        throw new NotImplementedException();
+    }
+
     private void Draw(object sender, EventArgs e)
     {
         var positions = GetPositions();
@@ -53,15 +65,25 @@ public class Renderer
         var canvas = surface.Canvas;
 
         canvas.Clear(SKColors.Black);
-        using var paint = new SKPaint { Color = SKColors.LightGreen };
 
         foreach (var pos in positions)
         {
-            var renderPos = pos.Value * RenderScale;
-            canvas.DrawRect((float)renderPos.X, (float)renderPos.Y, (float)(1 * RenderScale.X), (float)(1 * RenderScale.Y), paint);
+            var rect = ToSKRect(pos.Value);
+            canvas.DrawRect(rect, _humanPaint);
         }
 
         AfterDraw?.Invoke();
+    }
+
+    private SKRect ToSKRect(Sim.Geometry.PointI point)
+    {
+        var renderPos = point * RenderScale;
+
+        var left = (float)renderPos.X;
+        var top = (float)renderPos.Y;
+        var right = left + (float)(1 * RenderScale.X);
+        var bottom = top + (float)(1 * RenderScale.Y);
+        return new SKRect(left, top, right, bottom);
     }
 }
 

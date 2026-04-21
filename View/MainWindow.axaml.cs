@@ -57,7 +57,7 @@ public partial class MainWindow : Window
 
     private void SetupInputHandler(IWorldHost worldHost)
     {
-        InputHandler = new InputHandler(this, worldHost);
+        InputHandler = new InputHandler(this, worldHost, Renderer);
         KeyDown += (_, e) => InputHandler.Handle(e);
     }
 }

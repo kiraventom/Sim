@@ -3,7 +3,7 @@ using Sim.Host;
 
 namespace Sim.View;
 
-public class InputHandler(MainWindow window, IWorldHost worldHost)
+public class InputHandler(MainWindow window, IWorldHost worldHost, Renderer renderer)
 {
     public void Handle(KeyEventArgs e)
     {
@@ -15,6 +15,14 @@ public class InputHandler(MainWindow window, IWorldHost worldHost)
 
             case Key.Space:
                 worldHost.TogglePause();
+                return;
+
+            case Key.I:
+                renderer.ZoomIn();
+                return;
+
+            case Key.O:
+                renderer.ZoomOut();
                 return;
         }
     }
