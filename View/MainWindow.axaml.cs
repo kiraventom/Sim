@@ -52,7 +52,7 @@ public partial class MainWindow : Window
         // Map
         MapRenderer = new MapRenderer(MapWidth, MapHeight, RenderScaling, zoomCalc, panCalc)
         {
-            GetPositions = worldHost.GetPositions,
+            GetObjects = worldHost.GetObjects,
         };
 
         InitRenderer(MapRenderer, worldHost, MapImage.InvalidateVisual);
@@ -62,7 +62,7 @@ public partial class MainWindow : Window
         // MiniMap
         MiniMapRenderer = new MiniMapRenderer(MiniMapWidth, MiniMapHeight, RenderScaling, zoomCalc, panCalc)
         {
-            GetPositions = worldHost.GetPositions,
+            GetObjects = worldHost.GetObjects,
         };
 
         InitRenderer(MiniMapRenderer, worldHost, MiniMapImage.InvalidateVisual);

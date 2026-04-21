@@ -2,10 +2,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Timers;
 using Sim.Model;
-using Positions = System.Collections.Generic.IReadOnlyDictionary<int, Sim.Geometry.PointI>;
 using Sim.Geometry;
+using System.Collections.Generic;
 
 namespace Sim.Host;
 
@@ -13,11 +12,11 @@ internal class WorldHost : BackgroundService, IWorldHost
 {
     private const int INTERVAL = 50;
     private readonly World _world;
-    private readonly PositionsCache _cache;
+    private readonly ObjectsCache _cache;
     private readonly WorldSettings _settings;
     private bool _isPaused = false;
 
-    public WorldHost(ILogger<WorldHost> logger, World world, PositionsCache cache, WorldSettings settings)
+    public WorldHost(ILogger<WorldHost> logger, World world, ObjectsCache cache, WorldSettings settings)
     {
         _world = world;
         _cache = cache;
@@ -31,7 +30,7 @@ internal class WorldHost : BackgroundService, IWorldHost
         _isPaused = !_isPaused;
     }
 
-    public Positions GetPositions() => _cache.GetPositions();
+    public IReadOnlyCollection<IObject> GetObjects() => _cache.GetObjects();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

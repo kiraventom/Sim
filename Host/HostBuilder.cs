@@ -82,7 +82,7 @@ public class HostBuilder
     {
         _builder.Services
             .AddSingleton<WorldSettings>(_settings)
-            .AddSingleton<PositionsCache>()
+            .AddSingleton<ObjectsCache>()
             .AddSingleton<Map>()
             .AddSingleton<World>()
             .AddHostedService<WorldHost>();

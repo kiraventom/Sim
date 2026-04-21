@@ -1,10 +1,6 @@
 using Microsoft.Extensions.Logging;
-using Sim.Geometry;
 using Sim.Utils;
-using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sim.Model;
 
@@ -13,9 +9,9 @@ internal class World
     private readonly IReadOnlyDictionary<int, Human> _humans;
     private ILogger<World> Logger { get; }
     private Map Map { get; }
-    private PositionsCache Cache { get; }
+    private ObjectsCache Cache { get; }
 
-    public World(ILogger<World> logger, Map map, PositionsCache cache, WorldSettings settings)
+    public World(ILogger<World> logger, Map map, ObjectsCache cache, WorldSettings settings)
     {
         Logger = logger;
         Map = map;

@@ -1,9 +1,9 @@
 using Avalonia.Platform;
 using Sim.Geometry;
+using Sim.Host;
 using SkiaSharp;
 using System;
-using System.Collections.ObjectModel;
-using Positions = System.Collections.Generic.IReadOnlyDictionary<int, Sim.Geometry.PointI>;
+using System.Collections.Generic;
 
 namespace Sim.View;
 
@@ -17,7 +17,7 @@ public abstract class Renderer
     public ZoomCalculator ZoomCalc { get; }
     public PanCalculator PanCalc { get; }
 
-    public Func<Positions> GetPositions { get; init; } = () => ReadOnlyDictionary<int, PointI>.Empty;
+    public Func<IReadOnlyCollection<IObject>> GetObjects { get; init; } = () => Array.Empty<IObject>();
 
     protected Point RenderScale = new Point(1.0, 1.0);
 
@@ -57,8 +57,8 @@ public abstract class Renderer
 
     private void Draw(object sender, EventArgs e)
     {
-        var positions = GetPositions();
-        if (positions is null)
+        var objects = GetObjects();
+        if (objects is null)
             return;
 
         using var buf = _bitmap.Lock();
@@ -70,7 +70,7 @@ public abstract class Renderer
         canvas.Clear(SKColors.Black);
 
         DrawBackground(canvas);
-        DrawHumans(positions, canvas);
+        DrawHumans(objects, canvas);
 
         DrawInternal(canvas);
 
@@ -83,13 +83,14 @@ public abstract class Renderer
         DrawRect(canvas, rect, Brushes.Background);
     }
 
-    private void DrawHumans(Positions positions, SKCanvas canvas)
+    private void DrawHumans(IReadOnlyCollection<IObject> objects, SKCanvas canvas)
     {
-        foreach (var pos in positions)
+        foreach (var obj in objects)
         {
-            var rect = ToSKRect(pos.Value);
+            var rect = ToSKRect(obj);
             ApplyRenderScale(ref rect);
-            DrawRect(canvas, rect, Brushes.Human);
+            var brush = Brushes.GetBrush(obj.Type);
+            DrawRect(canvas, rect, brush);
         }
     }
 
@@ -100,14 +101,13 @@ public abstract class Renderer
         if (rect.Right < 0 || rect.Left > Width || rect.Bottom < 0 || rect.Top > Height)
             return;
 
-        FixSmallPoints(ref rect, brush);
-
+        ScaleSmallRect(ref rect, brush);
         canvas.DrawRect(rect, brush);
 
         brush.Dispose();
     }
 
-    private static void FixSmallPoints(ref SKRect rect, SKPaint brush)
+    private static void ScaleSmallRect(ref SKRect rect, SKPaint brush)
     {
         float wRatio = rect.Width < 1 ? rect.Width : 1;
         float hRatio = rect.Height < 1 ? rect.Height : 1;
@@ -121,12 +121,12 @@ public abstract class Renderer
         brush.Color = brush.Color.WithAlpha(alpha);
     }
 
-    private SKRect ToSKRect(PointI point)
+    private SKRect ToSKRect(IObject obj)
     {
-        var left = (float)point.X;
-        var top = (float)point.Y;
-        var right = left + 1;
-        var bottom = top + 1;
+        var left = (float)obj.Pos.X;
+        var top = (float)obj.Pos.Y;
+        var right = left + obj.Size.Width;
+        var bottom = top + obj.Size.Height;
         return new SKRect(left, top, right, bottom);
     }
 
