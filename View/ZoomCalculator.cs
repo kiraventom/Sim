@@ -9,7 +9,7 @@ public class ZoomCalculator
     private const float STEP = 1.0f;
     public float Zoom { get; private set; } = 1.0f;
     
-    public Size Size => new Size(Renderer.WIDTH / Zoom, Renderer.HEIGHT / Zoom);
+    public Size GetSize(Renderer renderer) => new Size(renderer.Width / Zoom, renderer.Height / Zoom);
 
     public void ApplyZoom(ref SKRect p)
     {

@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sim.Host;
+using System;
 using System.Linq;
 using System.Threading;
 
@@ -10,10 +11,15 @@ namespace Sim.View;
 
 public partial class MainWindow : Window
 {
-    public int ImageWidth => Renderer.WIDTH;
-    public int ImageHeight => Renderer.HEIGHT;
+    public int MapWidth => 800;
+    public int MapHeight => 800;
 
-    private Renderer Renderer;
+    public int MiniMapWidth => 300;
+    public int MiniMapHeight => 300;
+
+    private MapRenderer MapRenderer;
+    private MiniMapRenderer MiniMapRenderer;
+
     private InputHandler InputHandler;
 
     public MainWindow()
@@ -34,33 +40,46 @@ public partial class MainWindow : Window
 
         var worldHost = host.Services.GetServices<IHostedService>().OfType<IWorldHost>().First();
 
+        SetupRenderers(worldHost);
+        SetupInputHandler(worldHost);
+    }
+
+    private void SetupRenderers(IWorldHost worldHost)
+    {
         var zoomCalc = new ZoomCalculator();
         var panCalc = new PanCalculator();
 
-        SetupRenderer(worldHost, zoomCalc, panCalc);
-        SetupInputHandler(worldHost, zoomCalc, panCalc);
-    }
-
-    private void SetupRenderer(IWorldHost worldHost, ZoomCalculator zoomCalc, PanCalculator panCalc)
-    {
-        var renderScale = new Sim.Geometry.Point((double)ImageWidth / worldHost.WorldSize.Width, (double)ImageHeight / worldHost.WorldSize.Height);
-
-        Renderer = new Renderer(RenderScaling, zoomCalc, panCalc)
+        // Map
+        MapRenderer = new MapRenderer(MapWidth, MapHeight, RenderScaling, zoomCalc, panCalc)
         {
-            GetPositions = worldHost.GetPositions
+            GetPositions = worldHost.GetPositions,
         };
 
-        Renderer.SetRenderScale(renderScale);
-        Renderer.AfterDraw += DisplayImage.InvalidateVisual;
+        InitRenderer(MapRenderer, worldHost, MapImage.InvalidateVisual);
+        MapImage.Source = MapRenderer.Bitmap;
+        MapRenderer.Run();
 
-        DisplayImage.Source = Renderer.Bitmap;
+        // MiniMap
+        MiniMapRenderer = new MiniMapRenderer(MiniMapWidth, MiniMapHeight, RenderScaling, zoomCalc, panCalc)
+        {
+            GetPositions = worldHost.GetPositions,
+        };
 
-        Renderer.Run();
+        InitRenderer(MiniMapRenderer, worldHost, MiniMapImage.InvalidateVisual);
+        MiniMapImage.Source = MiniMapRenderer.Bitmap;
+        MiniMapRenderer.Run();
     }
 
-    private void SetupInputHandler(IWorldHost worldHost, ZoomCalculator zoomCalc, PanCalculator panCalc)
+    private static void InitRenderer(Renderer renderer, IWorldHost worldHost, Action afterDraw)
     {
-        InputHandler = new InputHandler(this, worldHost, zoomCalc, panCalc);
+        var renderScale = new Sim.Geometry.Point((double)renderer.Width / worldHost.WorldSize.Width, (double)renderer.Height / worldHost.WorldSize.Height);
+        renderer.SetRenderScale(renderScale);
+        renderer.AfterDraw += afterDraw;
+    }
+
+    private void SetupInputHandler(IWorldHost worldHost)
+    {
+        InputHandler = new InputHandler(this, worldHost, MapRenderer);
         KeyDown += (_, e) => InputHandler.Handle(e);
     }
 }

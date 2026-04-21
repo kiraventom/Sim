@@ -1,18 +1,14 @@
 using Avalonia.Input;
+using Sim.Geometry;
 using Sim.Host;
 using SkiaSharp;
 
 namespace Sim.View;
 
-public class InputHandler(MainWindow window, IWorldHost worldHost, ZoomCalculator zoomCalc, PanCalculator panCalc)
+public class InputHandler(MainWindow window, IWorldHost worldHost, MapRenderer renderer)
 {
     public void Handle(KeyEventArgs e)
     {
-        const int MOVE_FACTOR = 5;
-
-        var xMoveFactor = (float)(zoomCalc.Size.Width / MOVE_FACTOR);
-        var yMoveFactor = (float)(zoomCalc.Size.Height / MOVE_FACTOR);
-
         switch (e.Key)
         {
             case Key.C when e.KeyModifiers.HasFlag(KeyModifiers.Control):
@@ -24,32 +20,32 @@ public class InputHandler(MainWindow window, IWorldHost worldHost, ZoomCalculato
                 return;
 
             case Key.I:
-                zoomCalc.ZoomIn();
+                renderer.ZoomCalc.ZoomIn();
                 return;
 
             case Key.O:
-                zoomCalc.ZoomOut();
+                renderer.ZoomCalc.ZoomOut();
                 return;
 
             case Key.H:
-                panCalc.Move(new SKPoint(-xMoveFactor, 0));
+                renderer.PanCalc.Move(new Point(-0.2, 0));
                 return;
 
             case Key.L:
-                panCalc.Move(new SKPoint(xMoveFactor, 0));
+                renderer.PanCalc.Move(new Point(0.2, 0));
                 return;
 
             case Key.K:
-                panCalc.Move(new SKPoint(0, -yMoveFactor));
+                renderer.PanCalc.Move(new Point(0, -0.2));
                 return;
 
             case Key.J:
-                panCalc.Move(new SKPoint(0, yMoveFactor));
+                renderer.PanCalc.Move(new Point(0, 0.2));
                 return;
 
             case Key.R:
-                panCalc.Reset();
-                zoomCalc.Reset();
+                renderer.PanCalc.Reset();
+                renderer.ZoomCalc.Reset();
                 return;
         }
     }

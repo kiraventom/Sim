@@ -1,16 +1,22 @@
+using Sim.Geometry;
 using SkiaSharp;
 
 namespace Sim.View;
 
 public class PanCalculator
 {
-    public SKPoint TopLeft { get; private set; }
+    private Point TopLeft;
 
-    public void ApplyPan(ref SKRect p) => p.Offset(-TopLeft.X, -TopLeft.Y);
+    public SKPoint GetTopLeft(Renderer renderer) => new SKPoint(renderer.Width * (float)TopLeft.X, renderer.Height * (float)TopLeft.Y);
 
-    public void Move(SKPoint offset) => TopLeft += offset;
+    public void ApplyPan(Renderer renderer, ref SKRect p) => p.Offset(GetTopLeft(renderer).Negate());
 
-    public void Reset() => TopLeft = new SKPoint(0, 0);
+    public void Move(Point offset) => TopLeft += offset;
+
+    public void Reset() => TopLeft = new Point(0, 0);
 }
 
-
+public static class SKPointExtensions
+{
+    public static SKPoint Negate(this SKPoint point) => new SKPoint(-point.X, -point.Y);
+}
