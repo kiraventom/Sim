@@ -20,6 +20,8 @@ public class HostBuilder
     {
         _builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder();
         _builder.Services.AddSingleton<Paths>(BuildPaths);
+
+        ConfigureLogging();
     }
 
     public static HostBuilder Create() => new HostBuilder();
@@ -45,7 +47,7 @@ public class HostBuilder
         return this;
     }
 
-    public HostBuilder ConfigureLogging(Action<string> logAction)
+    private HostBuilder ConfigureLogging()
     {
         _builder.Services.AddSerilog((sp, l) =>
         {
@@ -56,9 +58,7 @@ public class HostBuilder
 
             l.MinimumLevel.Debug()
                 .WriteTo.Console()
-                .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day)
-                /* .WriteTo.Observers(events => events.Subscribe(new UIObserver(logAction))) */
-                ;
+                .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day);
         });
 
         return this;

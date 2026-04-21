@@ -1,12 +1,11 @@
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Positions = System.Collections.Generic.IReadOnlyDictionary<int, Sim.Geometry.PointI>;
 
 namespace Sim.Model;
 
-public class PositionsCache(ILogger<PositionsCache> logger, Map map)
+internal class PositionsCache(ILogger<PositionsCache> logger, Map map)
 {
     private const int MAX_CACHE_QUEUE_SIZE = 5;
 

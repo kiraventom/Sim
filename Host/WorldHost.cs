@@ -9,27 +9,36 @@ using Sim.Geometry;
 
 namespace Sim.Host;
 
-public class WorldHost(ILogger<WorldHost> logger, World world, PositionsCache cache, WorldSettings settings) : BackgroundService
+internal class WorldHost : BackgroundService, IWorldHost
 {
     private const int INTERVAL = 50;
-
+    private readonly World _world;
+    private readonly PositionsCache _cache;
+    private readonly WorldSettings _settings;
     private bool _isPaused = false;
 
-    public Size WorldSize => new Size(settings.MapWidth, settings.MapHeight);
+    public WorldHost(ILogger<WorldHost> logger, World world, PositionsCache cache, WorldSettings settings)
+    {
+        _world = world;
+        _cache = cache;
+        _settings = settings;
+    }
+
+    public Size WorldSize => new Size(_settings.MapWidth, _settings.MapHeight);
 
     public void TogglePause()
     {
         _isPaused = !_isPaused;
     }
 
-    public Positions GetPositions() => cache.GetPositions();
+    public Positions GetPositions() => _cache.GetPositions();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
             if (!_isPaused)
-                world.Tick();
+                _world.Tick();
 
             await Task.Delay(INTERVAL, stoppingToken);
         }

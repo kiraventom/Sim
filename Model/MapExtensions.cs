@@ -3,7 +3,7 @@ using Sim.Utils;
 
 namespace Sim.Model;
 
-public static class MapExtensions
+internal static class MapExtensions
 {
     public static PointI RandomFreePos(this Map map)
     {

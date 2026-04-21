@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Sim.Model;
 
-public class World
+internal class World
 {
     private readonly IReadOnlyDictionary<int, Human> _humans;
     private ILogger<World> Logger { get; }

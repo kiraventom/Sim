@@ -3,7 +3,7 @@ using Sim.Utils;
 
 namespace Sim.Model;
 
-public class Human
+internal class Human
 {
     public int Id { get; }
 

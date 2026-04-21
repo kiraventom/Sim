@@ -29,12 +29,5 @@
             Height="{Binding ImageHeight}"
             Name="DisplayImage" 
             RenderOptions.BitmapInterpolationMode="None" />
-
-        <ListBox 
-            Grid.Row="1" 
-            Grid.Column="0" 
-            Background="#222222"
-            Foreground="#DDDDDD"
-            ItemsSource="{Binding LogMessages}" />
     </Grid>
 </Window>

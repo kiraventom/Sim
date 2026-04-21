@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Sim.Model;
 
-public class Map(ILogger<Map> logger, WorldSettings settings)
+internal class Map(ILogger<Map> logger, WorldSettings settings)
 {
     private readonly Dictionary<int, PointI> _positions = [];
 
