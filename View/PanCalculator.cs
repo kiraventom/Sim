@@ -5,18 +5,13 @@ namespace Sim.View;
 
 public class PanCalculator
 {
-    private Point TopLeft;
+    public Point RelTopLeft { get; private set; }
 
-    public SKPoint GetTopLeft(Renderer renderer) => new SKPoint(renderer.Width * (float)TopLeft.X, renderer.Height * (float)TopLeft.Y);
+    public SKPoint GetAbsTopLeft(Renderer renderer) => new SKPoint(renderer.Width * (float)RelTopLeft.X, renderer.Height * (float)RelTopLeft.Y);
 
-    public void ApplyPan(Renderer renderer, ref SKRect p) => p.Offset(GetTopLeft(renderer).Negate());
+    public void ApplyPan(Renderer renderer, ref SKRect p) => p.Offset(GetAbsTopLeft(renderer).Negate());
 
-    public void Move(Point offset) => TopLeft += offset;
+    public void Move(Point relOffset) => RelTopLeft += relOffset;
 
-    public void Reset() => TopLeft = new Point(0, 0);
-}
-
-public static class SKPointExtensions
-{
-    public static SKPoint Negate(this SKPoint point) => new SKPoint(-point.X, -point.Y);
+    public void Reset() => RelTopLeft = new Point(0, 0);
 }

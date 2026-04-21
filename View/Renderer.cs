@@ -100,24 +100,25 @@ public abstract class Renderer
         if (rect.Right < 0 || rect.Left > Width || rect.Bottom < 0 || rect.Top > Height)
             return;
 
-        byte alpha = 255;
-        
-        if (rect.Width < 1)
-        {
-            rect.Inflate((float)(1 - rect.Width), 0);
-            alpha = (byte)Math.Round(rect.Width * 255);
-        }
+        FixSmallPoints(ref rect, brush);
 
-        if (rect.Height < 1)
-        {
-            rect.Inflate(0, 1 - rect.Height);
-            alpha = (byte)Math.Round(rect.Height * 255);
-        }
-
-        brush.Color = brush.Color.WithAlpha(alpha);
         canvas.DrawRect(rect, brush);
 
         brush.Dispose();
+    }
+
+    private static void FixSmallPoints(ref SKRect rect, SKPaint brush)
+    {
+        float wRatio = rect.Width < 1 ? rect.Width : 1;
+        float hRatio = rect.Height < 1 ? rect.Height : 1;
+        if (wRatio >= 1 && hRatio >= 1)
+            return;
+
+        var minRatio = Math.Min(wRatio, hRatio);
+        rect.Inflate(wRatio < 1 ? (1 - rect.Width) / 2f : 0, hRatio < 1 ? (1 - rect.Height) / 2f : 0);
+
+        var alpha = (byte)Math.Round(minRatio * 255);
+        brush.Color = brush.Color.WithAlpha(alpha);
     }
 
     private SKRect ToSKRect(PointI point)

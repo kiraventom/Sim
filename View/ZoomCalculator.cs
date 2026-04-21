@@ -6,7 +6,9 @@ namespace Sim.View;
 
 public class ZoomCalculator
 {
-    private const float STEP = 1.0f;
+    private const float FACTOR = 1.2f;
+    private const float MIN_ZOOM = 0.5f;
+
     public float Zoom { get; private set; } = 1.0f;
     
     public Size GetSize(Renderer renderer) => new Size(renderer.Width / Zoom, renderer.Height / Zoom);
@@ -16,14 +18,27 @@ public class ZoomCalculator
         p = new SKRect(p.Left * Zoom, p.Top * Zoom, p.Right * Zoom, p.Bottom * Zoom);
     }
 
-    public void ZoomIn()
+    public void ZoomIn(PanCalculator panCalc)
     {
-        Zoom += STEP;
+        var oldZoom = Zoom;
+        Zoom *= FACTOR;
+        AdjustPan(panCalc, oldZoom, Zoom);
     }
 
-    public void ZoomOut()
+    public void ZoomOut(PanCalculator panCalc)
     {
-        Zoom = Math.Max(1.0f, Zoom - STEP);
+        var oldZoom = Zoom;
+        Zoom = Math.Max(MIN_ZOOM, Zoom / FACTOR);
+        AdjustPan(panCalc, oldZoom, Zoom);
+    }
+
+    private void AdjustPan(PanCalculator panCalc, float oldZoom, float newZoom)
+    {
+        if (oldZoom == newZoom) return;
+        var ratio = newZoom / oldZoom;
+        var dx = (0.5 + panCalc.RelTopLeft.X) * (ratio - 1);
+        var dy = (0.5 + panCalc.RelTopLeft.Y) * (ratio - 1);
+        panCalc.Move(new Point(dx, dy));
     }
 
     public void Reset() => Zoom = 1.0f;

@@ -13,12 +13,12 @@ public class MiniMapRenderer : Renderer
     protected override void DrawInternal(SKCanvas canvas)
     {
         var size = ZoomCalc.GetSize(this);
-        var topLeft = PanCalc.GetTopLeft(this);
+        var topLeft = PanCalc.GetAbsTopLeft(this);
 
         var left = (float)(topLeft.X / ZoomCalc.Zoom);
         var top = (float)(topLeft.Y / ZoomCalc.Zoom);
-        var right = (float)(left + size.Width);
-        var bottom = (float)(top + size.Height);
+        var right = (float)(left + size.Width) - 1;
+        var bottom = (float)(top + size.Height) - 1;
 
         var rect = new SKRect(left, top, right, bottom);
         DrawRect(canvas, rect, Brushes.Visor);

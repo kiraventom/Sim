@@ -20,11 +20,11 @@ public class InputHandler(MainWindow window, IWorldHost worldHost, MapRenderer r
                 return;
 
             case Key.I:
-                renderer.ZoomCalc.ZoomIn();
+                renderer.ZoomCalc.ZoomIn(renderer.PanCalc);
                 return;
 
             case Key.O:
-                renderer.ZoomCalc.ZoomOut();
+                renderer.ZoomCalc.ZoomOut(renderer.PanCalc);
                 return;
 
             case Key.H:
