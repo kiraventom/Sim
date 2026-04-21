@@ -5,7 +5,7 @@ namespace Sim.Host;
 
 public interface IWorldHost
 {
-    Size WorldSize { get; }
+    SizeI WorldSize { get; }
     void TogglePause();
     Positions GetPositions();
 }

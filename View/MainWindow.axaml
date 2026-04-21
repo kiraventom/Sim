@@ -10,7 +10,7 @@
     Title="Sim"
     WindowState="FullScreen"
     CanResize="False"
-    Background="#202020">
+    Background="#111111">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -22,12 +22,16 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
 
-        <Image 
+        <Border
             Grid.Row="0"
             Grid.Column="0"
-            Width="{Binding ImageWidth}"
-            Height="{Binding ImageHeight}"
-            Name="DisplayImage" 
-            RenderOptions.BitmapInterpolationMode="None" />
+            BorderThickness="1"
+            BorderBrush="#99FFFFFF">
+            <Image 
+                Width="{Binding ImageWidth}"
+                Height="{Binding ImageHeight}"
+                Name="DisplayImage" 
+                RenderOptions.BitmapInterpolationMode="None" />
+        </Border>
     </Grid>
 </Window>

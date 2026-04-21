@@ -19,8 +19,8 @@ public static class RND
     public static double Double() => _rnd.NextDouble();
     public static double Double(double max) => _rnd.NextDouble() * max;
     public static double Double(double min, double max) => min + (_rnd.NextDouble() * (max - min));
-    public static PointI PointI(Size s) => PointI(s.Width, s.Height);
+    public static PointI PointI(SizeI s) => PointI(s.Width, s.Height);
     public static PointI PointI(int maxX, int maxY) => new PointI(_rnd.Next(maxX), _rnd.Next(maxY));
-    public static Point Point(Size s) => Point(s.Width, s.Height);
+    public static Point Point(SizeI s) => Point(s.Width, s.Height);
     public static Point Point(double maxX, double maxY) => new Point(_rnd.NextDouble() * maxX, _rnd.NextDouble() * maxY);
 }

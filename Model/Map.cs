@@ -8,7 +8,7 @@ internal class Map(ILogger<Map> logger, WorldSettings settings)
 {
     private readonly Dictionary<int, PointI> _positions = [];
 
-    public Size Size { get; } = new Size(settings.MapWidth, settings.MapHeight);
+    public SizeI Size { get; } = new SizeI(settings.MapWidth, settings.MapHeight);
     private readonly int[,] _map = new int[settings.MapWidth, settings.MapHeight];
 
     public PointI this[int id] => Positions.TryGetValue(id, out var point) ? point : PointI.INVALID;

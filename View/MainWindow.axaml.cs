@@ -34,15 +34,18 @@ public partial class MainWindow : Window
 
         var worldHost = host.Services.GetServices<IHostedService>().OfType<IWorldHost>().First();
 
-        SetupRenderer(worldHost);
-        SetupInputHandler(worldHost);
+        var zoomCalc = new ZoomCalculator();
+        var panCalc = new PanCalculator();
+
+        SetupRenderer(worldHost, zoomCalc, panCalc);
+        SetupInputHandler(worldHost, zoomCalc, panCalc);
     }
 
-    private void SetupRenderer(IWorldHost worldHost)
+    private void SetupRenderer(IWorldHost worldHost, ZoomCalculator zoomCalc, PanCalculator panCalc)
     {
         var renderScale = new Sim.Geometry.Point((double)ImageWidth / worldHost.WorldSize.Width, (double)ImageHeight / worldHost.WorldSize.Height);
 
-        Renderer = new Renderer(RenderScaling)
+        Renderer = new Renderer(RenderScaling, zoomCalc, panCalc)
         {
             GetPositions = worldHost.GetPositions
         };
@@ -55,9 +58,9 @@ public partial class MainWindow : Window
         Renderer.Run();
     }
 
-    private void SetupInputHandler(IWorldHost worldHost)
+    private void SetupInputHandler(IWorldHost worldHost, ZoomCalculator zoomCalc, PanCalculator panCalc)
     {
-        InputHandler = new InputHandler(this, worldHost, Renderer);
+        InputHandler = new InputHandler(this, worldHost, zoomCalc, panCalc);
         KeyDown += (_, e) => InputHandler.Handle(e);
     }
 }

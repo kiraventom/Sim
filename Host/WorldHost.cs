@@ -24,7 +24,7 @@ internal class WorldHost : BackgroundService, IWorldHost
         _settings = settings;
     }
 
-    public Size WorldSize => new Size(_settings.MapWidth, _settings.MapHeight);
+    public SizeI WorldSize => new SizeI(_settings.MapWidth, _settings.MapHeight);
 
     public void TogglePause()
     {

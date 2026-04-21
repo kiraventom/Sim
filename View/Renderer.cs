@@ -1,7 +1,5 @@
-using Avalonia;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using Avalonia.Threading;
+using Sim.Geometry;
 using SkiaSharp;
 using System;
 using System.Collections.ObjectModel;
@@ -11,46 +9,37 @@ namespace Sim.View;
 
 public class Renderer
 {
-    private readonly WriteableBitmap _bitmap;
-    private readonly DispatcherTimer _timer;
-
-    private readonly SKPaint _humanPaint = new SKPaint { Color = SKColors.LightGreen };
-
-    private Sim.Geometry.Point RenderScale = new Sim.Geometry.Point(1.0, 1.0);
-
     private const int FPS = 60;
-
     public const int WIDTH = 800;
     public const int HEIGHT = 800;
 
-    public WriteableBitmap Bitmap => _bitmap;
+    private readonly Avalonia.Media.Imaging.WriteableBitmap _bitmap;
+    private readonly Avalonia.Threading.DispatcherTimer _timer;
 
-    public Func<Positions> GetPositions { get; init; } = () => ReadOnlyDictionary<int, Sim.Geometry.PointI>.Empty;
+    private ZoomCalculator ZoomCalc { get; }
+    private PanCalculator PanCalc { get; }
 
+    private Point RenderScale = new Point(1.0, 1.0);
+
+    public Avalonia.Media.Imaging.WriteableBitmap Bitmap => _bitmap;
+    public Func<Positions> GetPositions { get; init; } = () => ReadOnlyDictionary<int, PointI>.Empty;
     public event Action AfterDraw;
 
-    public Renderer(double dpiScale)
+    public Renderer(double dpiScale, ZoomCalculator zoomCalc, PanCalculator panCalc)
     {
-        _bitmap = new WriteableBitmap(new PixelSize(WIDTH, HEIGHT), new Vector(96 * dpiScale, 96 * dpiScale), PixelFormat.Bgra8888);
+        _bitmap = new Avalonia.Media.Imaging.WriteableBitmap(new Avalonia.PixelSize(WIDTH, HEIGHT), new Avalonia.Vector(96 * dpiScale, 96 * dpiScale), PixelFormat.Bgra8888);
+
+        ZoomCalc = zoomCalc;
+        PanCalc = panCalc;
 
         var interval = TimeSpan.FromSeconds(1) / FPS;
-        _timer = new DispatcherTimer { Interval = interval };
+        _timer = new Avalonia.Threading.DispatcherTimer { Interval = interval };
         _timer.Tick += Draw;
     }
 
     public void Run() => _timer.Start();
 
-    public void SetRenderScale(Sim.Geometry.Point renderScale) => RenderScale = renderScale;
-
-    public void ZoomIn()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void ZoomOut()
-    {
-        throw new NotImplementedException();
-    }
+    public void SetRenderScale(Point renderScale) => RenderScale = renderScale;
 
     private void Draw(object sender, EventArgs e)
     {
@@ -66,24 +55,52 @@ public class Renderer
 
         canvas.Clear(SKColors.Black);
 
-        foreach (var pos in positions)
-        {
-            var rect = ToSKRect(pos.Value);
-            canvas.DrawRect(rect, _humanPaint);
-        }
+        DrawBackground(canvas);
+        DrawHumans(positions, canvas);
 
         AfterDraw?.Invoke();
     }
 
-    private SKRect ToSKRect(Sim.Geometry.PointI point)
+    private void DrawBackground(SKCanvas canvas)
     {
-        var renderPos = point * RenderScale;
+        var rect = new SKRect(0, 0, WIDTH, HEIGHT);
 
-        var left = (float)renderPos.X;
-        var top = (float)renderPos.Y;
-        var right = left + (float)(1 * RenderScale.X);
-        var bottom = top + (float)(1 * RenderScale.Y);
+        ApplyRenderScale(ref rect);
+        ZoomCalc.ApplyZoom(ref rect);
+        PanCalc.ApplyPan(ref rect);
+
+        canvas.DrawRect(rect, Brushes.Empty);
+    }
+
+    private void DrawHumans(Positions positions, SKCanvas canvas)
+    {
+        foreach (var pos in positions)
+        {
+            var rect = ToSKRect(pos.Value);
+
+            ApplyRenderScale(ref rect);
+            ZoomCalc.ApplyZoom(ref rect);
+            PanCalc.ApplyPan(ref rect);
+
+            if (rect.Right < 0 || rect.Left > WIDTH || rect.Bottom < 0 || rect.Top > HEIGHT)
+                continue;
+
+            canvas.DrawRect(rect, Brushes.Human);
+        }
+    }
+
+    private SKRect ToSKRect(PointI point)
+    {
+        var left = (float)point.X;
+        var top = (float)point.Y;
+        var right = left + 1;
+        var bottom = top + 1;
         return new SKRect(left, top, right, bottom);
+    }
+
+    private void ApplyRenderScale(ref SKRect rect)
+    {
+        rect = new SKRect(rect.Left * (float)RenderScale.X, rect.Top * (float)RenderScale.Y, rect.Right * (float)RenderScale.X, rect.Bottom * (float)RenderScale.Y);
     }
 }
 
