@@ -18,6 +18,12 @@ public class ZoomCalculator
         p = new SKRect(p.Left * Zoom, p.Top * Zoom, p.Right * Zoom, p.Bottom * Zoom);
     }
 
+    public void ApplyZoom(ref (SKPoint, SKPoint) p)
+    {
+        var (a, b) = p;
+        p = (new SKPoint(a.X * Zoom, a.Y * Zoom), new SKPoint(b.X * Zoom, b.Y * Zoom));
+    }
+
     public void ZoomIn(PanCalculator panCalc)
     {
         var oldZoom = Zoom;

@@ -8,6 +8,13 @@ public static class Brushes
    public static SKPaint Invalid => new SKPaint { Color = SKColors.Red };
    public static SKPaint Unknown => new SKPaint { Color = SKColors.Pink };
    public static SKPaint Human => new SKPaint { Color = SKColors.LightGreen };
+   public static SKPaint Line => new SKPaint 
+   { 
+       Color = SKColors.Blue.WithAlpha(80), 
+       IsStroke = true,
+       PathEffect = SKPathEffect.CreateDash([ 5, 5 ], 0)
+   };
+
    public static SKPaint Background => new SKPaint { Color = new SKColor(0x22, 0x22, 0x22) };
    public static SKPaint Visor => new SKPaint 
    { 
@@ -16,12 +23,13 @@ public static class Brushes
         PathEffect = SKPathEffect.CreateDash([ 5, 5 ], 0)
    };
 
-    internal static SKPaint GetBrush(ObjectType type)
+    internal static SKPaint GetBrush(IEntity entity)
     {
-        return type switch
+        return entity switch
         {
-            ObjectType.Invalid => Brushes.Invalid,
-            ObjectType.Human => Brushes.Human,
+            null => Brushes.Invalid,
+            IHumanEntity => Brushes.Human,
+            ILineEntity => Brushes.Line,
             _ => Brushes.Unknown
         };
     }

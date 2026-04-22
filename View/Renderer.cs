@@ -1,4 +1,4 @@
-using Avalonia.Platform;
+﻿using Avalonia.Platform;
 using Sim.Geometry;
 using Sim.Host;
 using SkiaSharp;
@@ -17,7 +17,7 @@ public abstract class Renderer
     public ZoomCalculator ZoomCalc { get; }
     public PanCalculator PanCalc { get; }
 
-    public Func<IReadOnlyCollection<IObject>> GetObjects { get; init; } = () => Array.Empty<IObject>();
+    public Func<IReadOnlyCollection<IEntity>> GetEntities { get; init; } = () => Array.Empty<IEntity>();
 
     protected Point RenderScale = new Point(1.0, 1.0);
 
@@ -55,10 +55,16 @@ public abstract class Renderer
         PanCalc.ApplyPan(this, ref rect);
     }
 
+    protected virtual void ApplyZoomPan(ref (SKPoint, SKPoint) points)
+    {
+        ZoomCalc.ApplyZoom(ref points);
+        PanCalc.ApplyPan(this, ref points);
+    }
+
     private void Draw(object sender, EventArgs e)
     {
-        var objects = GetObjects();
-        if (objects is null)
+        var entities = GetEntities();
+        if (entities is null || entities.Count == 0)
             return;
 
         using var buf = _bitmap.Lock();
@@ -70,7 +76,7 @@ public abstract class Renderer
         canvas.Clear(SKColors.Black);
 
         DrawBackground(canvas);
-        DrawHumans(objects, canvas);
+        DrawEntities(entities, canvas);
 
         DrawInternal(canvas);
 
@@ -83,14 +89,25 @@ public abstract class Renderer
         DrawRect(canvas, rect, Brushes.Background);
     }
 
-    private void DrawHumans(IReadOnlyCollection<IObject> objects, SKCanvas canvas)
+    private void DrawEntities(IReadOnlyCollection<IEntity> entities, SKCanvas canvas)
     {
-        foreach (var obj in objects)
+        foreach (var entity in entities)
         {
-            var rect = ToSKRect(obj);
-            ApplyRenderScale(ref rect);
-            var brush = Brushes.GetBrush(obj.Type);
-            DrawRect(canvas, rect, brush);
+            var brush = Brushes.GetBrush(entity);
+            switch (entity)
+            {
+                case IRectEntity rectEntity:
+                    var rect = ToSKRect(rectEntity);
+                    ApplyRenderScale(ref rect);
+                    DrawRect(canvas, rect, brush);
+                    break;
+
+                case ILineEntity lineEntity:
+                    var points = ToSKPoints(lineEntity);
+                    ApplyRenderScale(ref points);
+                    DrawLine(canvas, points, brush);
+                    break;
+            }
         }
     }
 
@@ -103,6 +120,16 @@ public abstract class Renderer
 
         ScaleSmallRect(ref rect, brush);
         canvas.DrawRect(rect, brush);
+
+        brush.Dispose();
+    }
+
+    protected void DrawLine(SKCanvas canvas, (SKPoint, SKPoint) points, SKPaint brush)
+    {
+        ApplyZoomPan(ref points);
+
+        var (a, b) = points;
+        canvas.DrawLine(a, b, brush);
 
         brush.Dispose();
     }
@@ -121,18 +148,31 @@ public abstract class Renderer
         brush.Color = brush.Color.WithAlpha(alpha);
     }
 
-    private SKRect ToSKRect(IObject obj)
+    private SKRect ToSKRect(IRectEntity entity)
     {
-        var left = (float)obj.Pos.X;
-        var top = (float)obj.Pos.Y;
-        var right = left + obj.Size.Width;
-        var bottom = top + obj.Size.Height;
+        var left = (float)entity.Pos.X;
+        var top = (float)entity.Pos.Y;
+        var right = left + entity.Size.Width;
+        var bottom = top + entity.Size.Height;
         return new SKRect(left, top, right, bottom);
+    }
+
+    private (SKPoint, SKPoint) ToSKPoints(ILineEntity entity)
+    {
+        var a = new SKPoint(entity.A.X, entity.A.Y);
+        var b = new SKPoint(entity.B.X, entity.B.Y);
+        return (a, b);
     }
 
     private void ApplyRenderScale(ref SKRect rect)
     {
         rect = new SKRect(rect.Left * (float)RenderScale.X, rect.Top * (float)RenderScale.Y, rect.Right * (float)RenderScale.X, rect.Bottom * (float)RenderScale.Y);
+    }
+
+    private void ApplyRenderScale(ref (SKPoint, SKPoint) points)
+    {
+        var (a, b) = points;
+        points = (new SKPoint(a.X * (float)RenderScale.X, a.Y * (float)RenderScale.Y), new SKPoint(b.X * (float)RenderScale.X, b.Y * (float)RenderScale.Y));
     }
 }
 

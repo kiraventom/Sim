@@ -1,10 +1,11 @@
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using System.Threading;
 using Sim.Model;
 using Sim.Geometry;
 using System.Collections.Generic;
+using Sim.Model.Entities;
 
 namespace Sim.Host;
 
@@ -12,11 +13,11 @@ internal class WorldHost : BackgroundService, IWorldHost
 {
     private const int INTERVAL = 50;
     private readonly World _world;
-    private readonly ObjectsCache _cache;
+    private readonly EntityCache _cache;
     private readonly WorldSettings _settings;
     private bool _isPaused = false;
 
-    public WorldHost(ILogger<WorldHost> logger, World world, ObjectsCache cache, WorldSettings settings)
+    public WorldHost(ILogger<WorldHost> logger, World world, EntityCache cache, WorldSettings settings)
     {
         _world = world;
         _cache = cache;
@@ -30,7 +31,7 @@ internal class WorldHost : BackgroundService, IWorldHost
         _isPaused = !_isPaused;
     }
 
-    public IReadOnlyCollection<IObject> GetObjects() => _cache.GetObjects();
+    public IReadOnlyCollection<IEntity> GetEntities() => _cache.GetEntities();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

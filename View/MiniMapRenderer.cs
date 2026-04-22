@@ -28,4 +28,9 @@ public class MiniMapRenderer : Renderer
     {
         // do not modify points directly
     }
+
+    protected override void ApplyZoomPan(ref (SKPoint, SKPoint) rect) 
+    {
+        // do not modify points directly
+    }
 }

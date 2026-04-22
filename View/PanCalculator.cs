@@ -10,6 +10,13 @@ public class PanCalculator
     public SKPoint GetAbsTopLeft(Renderer renderer) => new SKPoint(renderer.Width * (float)RelTopLeft.X, renderer.Height * (float)RelTopLeft.Y);
 
     public void ApplyPan(Renderer renderer, ref SKRect p) => p.Offset(GetAbsTopLeft(renderer).Negate());
+    public void ApplyPan(Renderer renderer, ref (SKPoint, SKPoint) p)
+    {
+        var (a, b) = p;
+        a.Offset(GetAbsTopLeft(renderer).Negate());
+        b.Offset(GetAbsTopLeft(renderer).Negate());
+        p = (a, b);
+    }
 
     public void Move(Point relOffset) => RelTopLeft += relOffset;
 

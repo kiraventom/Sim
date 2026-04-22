@@ -5,16 +5,6 @@ namespace Sim.Model;
 
 internal static class MapExtensions
 {
-    public static PointI RandomFreePos(this Map map)
-    {
-        PointI point;
-        do
-        {
-            point = RND.PointI(map.Size);
-        }
-        while (map[point] != SpecialCell.EMPTY);
-
-        return point;
-    }
+    public static Point RandomFreePos(this Map map) => RND.Point(1, 1);
 }
 

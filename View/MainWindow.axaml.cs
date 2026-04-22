@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -52,7 +52,7 @@ public partial class MainWindow : Window
         // Map
         MapRenderer = new MapRenderer(MapWidth, MapHeight, RenderScaling, zoomCalc, panCalc)
         {
-            GetObjects = worldHost.GetObjects,
+            GetEntities = worldHost.GetEntities,
         };
 
         InitRenderer(MapRenderer, worldHost, MapImage.InvalidateVisual);
@@ -62,7 +62,7 @@ public partial class MainWindow : Window
         // MiniMap
         MiniMapRenderer = new MiniMapRenderer(MiniMapWidth, MiniMapHeight, RenderScaling, zoomCalc, panCalc)
         {
-            GetObjects = worldHost.GetObjects,
+            GetEntities = worldHost.GetEntities,
         };
 
         InitRenderer(MiniMapRenderer, worldHost, MiniMapImage.InvalidateVisual);

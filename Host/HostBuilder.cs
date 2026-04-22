@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
@@ -6,6 +6,7 @@ using System.IO;
 using static System.Environment;
 using Sim.Model;
 using Sim.View;
+using Sim.Model.Entities;
 
 namespace Sim.Host;
 
@@ -82,9 +83,10 @@ public class HostBuilder
     {
         _builder.Services
             .AddSingleton<WorldSettings>(_settings)
-            .AddSingleton<ObjectsCache>()
             .AddSingleton<Map>()
             .AddSingleton<World>()
+            .AddSingleton<EntityBuilder>()
+            .AddSingleton<EntityCache>()
             .AddHostedService<WorldHost>();
 
         var host = _builder.Build();

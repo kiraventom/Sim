@@ -35,6 +35,5 @@ public readonly struct PointI(int x, int y)
     public override string ToString() => _str;
 
     public override bool Equals(object obj) => obj is PointI point && this == point;
-
     public override int GetHashCode() => HashCode.Combine(X, Y);
 }
