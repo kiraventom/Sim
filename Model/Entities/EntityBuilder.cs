@@ -9,7 +9,7 @@ namespace Sim.Model.Entities;
 
 internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map)
 {
-    public IReadOnlyCollection<IEntity> BuildEntities()
+    public IReadOnlyList<IEntity> BuildEntities()
     {
         List<IEntity> entities = [];
         foreach (var (id, point) in map.Positions)
@@ -20,18 +20,14 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
                 continue;
             }
 
-            var entityPoint = ToEntityPoint(point);
+            var absPoint = point.ToAbsPoint(settings);
 
             IReadOnlyCollection<IEntity> entitiesToAdd = obj switch
             {
-                Human h when h.Plans.FirstOrDefault() is Plan p => 
+                Human h when h.Plans.First() is Plan p => 
                 [ 
-                    new HumanEntity(new SizeI(1, 1), entityPoint), 
-                    new LineEntity(entityPoint, ToEntityPoint(p.Target)) 
-                ],
-                Human h => 
-                [ 
-                    new HumanEntity(new SizeI(1, 1), entityPoint), 
+                    new HumanEntity(h.Id, new SizeI(1, 1), absPoint),
+                    new LineEntity(id, absPoint, p.Target.ToAbsPoint(settings)) 
                 ],
             };
 
@@ -41,7 +37,4 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
         entities.Sort((a, b) => a.Priority.CompareTo(b.Priority));
         return entities;
     }
-
-    private PointI ToEntityPoint(Point point) => (point * new Point(settings.MapWidth, settings.MapHeight)).ToPointI();
 }
-

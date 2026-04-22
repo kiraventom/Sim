@@ -18,6 +18,7 @@ public abstract class Renderer
     public PanCalculator PanCalc { get; }
 
     public Func<IReadOnlyCollection<IEntity>> GetEntities { get; init; } = () => Array.Empty<IEntity>();
+    public Func<int> GetSelectedObjectId { get; init; } = () => -1;
 
     protected Point RenderScale = new Point(1.0, 1.0);
 
@@ -67,6 +68,8 @@ public abstract class Renderer
         if (entities is null || entities.Count == 0)
             return;
 
+        var selectedObjectId = GetSelectedObjectId();
+
         using var buf = _bitmap.Lock();
         var info = new SKImageInfo(Width, Height, SKColorType.Bgra8888);
         using var surface = SKSurface.Create(info, buf.Address, buf.RowBytes);
@@ -76,7 +79,7 @@ public abstract class Renderer
         canvas.Clear(SKColors.Black);
 
         DrawBackground(canvas);
-        DrawEntities(entities, canvas);
+        DrawEntities(entities, selectedObjectId, canvas);
 
         DrawInternal(canvas);
 
@@ -86,20 +89,24 @@ public abstract class Renderer
     private void DrawBackground(SKCanvas canvas)
     {
         var rect = new SKRect(0, 0, Width, Height);
-        DrawRect(canvas, rect, Brushes.Background);
+        DrawRect(canvas, ref rect, Brushes.Background);
     }
 
-    private void DrawEntities(IReadOnlyCollection<IEntity> entities, SKCanvas canvas)
+    private void DrawEntities(IReadOnlyCollection<IEntity> entities, int selectedObjectId, SKCanvas canvas)
     {
         foreach (var entity in entities)
         {
-            var brush = Brushes.GetBrush(entity);
+            var isSelected = entity.ObjectId == selectedObjectId;
+            var brush = Brushes.GetBrush(entity, isSelected);
             switch (entity)
             {
-                case IRectEntity rectEntity:
-                    var rect = ToSKRect(rectEntity);
+                case IHumanEntity humanEntity:
+                    var rect = ToSKRect(humanEntity);
                     ApplyRenderScale(ref rect);
-                    DrawRect(canvas, rect, brush);
+                    DrawRect(canvas, ref rect, brush);
+
+                    if (isSelected)
+                        DrawInfo(canvas, rect, humanEntity);
                     break;
 
                 case ILineEntity lineEntity:
@@ -111,7 +118,15 @@ public abstract class Renderer
         }
     }
 
-    protected void DrawRect(SKCanvas canvas, SKRect rect, SKPaint brush)
+    protected virtual void DrawInfo(SKCanvas canvas, SKRect rect, IHumanEntity humanEntity)
+    {
+        var text = SKTextBlob.Create(humanEntity.ObjectId.ToString(), new SKFont(SKTypeface.CreateDefault()));
+        var textPoint = new SKPoint(rect.Left - text.Bounds.MidX, rect.Top - text.Bounds.Height / 2);
+
+        canvas.DrawText(text, textPoint.X, textPoint.Y, Brushes.Info);
+    }
+
+    protected void DrawRect(SKCanvas canvas, ref SKRect rect, SKPaint brush)
     {
         ApplyZoomPan(ref rect);
 

@@ -5,6 +5,7 @@ namespace Sim.Host;
 public interface IEntity
 {
     int Priority { get; }
+    int ObjectId { get; }
 }
 
 public interface IRectEntity : IEntity

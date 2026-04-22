@@ -47,6 +47,18 @@ public class InputHandler(MainWindow window, IWorldHost worldHost, MapRenderer r
                 renderer.PanCalc.Reset();
                 renderer.ZoomCalc.Reset();
                 return;
+
+            case Key.N when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
+                worldHost.SelectPrevObject();
+                return;
+
+            case Key.N:
+                worldHost.SelectNextObject();
+                return;
+
+            case Key.Escape:
+                worldHost.SelectObject(-1);
+                return;
         }
     }
 }

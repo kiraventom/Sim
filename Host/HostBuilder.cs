@@ -85,6 +85,7 @@ public class HostBuilder
             .AddSingleton<WorldSettings>(_settings)
             .AddSingleton<Map>()
             .AddSingleton<World>()
+            .AddSingleton<ObjectInfoBuilder>()
             .AddSingleton<EntityBuilder>()
             .AddSingleton<EntityCache>()
             .AddHostedService<WorldHost>();

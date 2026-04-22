@@ -1,3 +1,4 @@
+﻿using System;
 using Sim.Host;
 using SkiaSharp;
 
@@ -7,6 +8,7 @@ public static class Brushes
 {
    public static SKPaint Invalid => new SKPaint { Color = SKColors.Red };
    public static SKPaint Unknown => new SKPaint { Color = SKColors.Pink };
+   public static SKPaint Info => new SKPaint { Color = SKColors.White };
    public static SKPaint Human => new SKPaint { Color = SKColors.LightGreen };
    public static SKPaint Line => new SKPaint 
    { 
@@ -23,14 +25,23 @@ public static class Brushes
         PathEffect = SKPathEffect.CreateDash([ 5, 5 ], 0)
    };
 
-    internal static SKPaint GetBrush(IEntity entity)
+    internal static SKPaint GetBrush(IEntity entity, bool isSelected)
     {
-        return entity switch
+        var brush = entity switch
         {
             null => Brushes.Invalid,
             IHumanEntity => Brushes.Human,
             ILineEntity => Brushes.Line,
             _ => Brushes.Unknown
         };
+
+        if (isSelected)
+        {
+            brush.Color.ToHsl(out var h, out var s, out var l);
+            l = Math.Min(100f, l + 15);
+            brush.Color = SKColor.FromHsl(h, s, l);
+        }
+
+        return brush;
     }
 }

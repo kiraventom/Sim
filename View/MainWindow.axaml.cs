@@ -6,6 +6,7 @@ using Sim.Host;
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sim.View;
 
@@ -40,6 +41,15 @@ public partial class MainWindow : Window
 
         var worldHost = host.Services.GetServices<IHostedService>().OfType<IWorldHost>().First();
 
+        Task.Run(async () =>
+        {
+            while (true)
+            {
+                Dispatcher.Invoke(() => InfoText.Text = worldHost.GetInfo(worldHost.SelectedObjectId).Text);
+                await Task.Delay(100);
+            }
+        });
+
         SetupRenderers(worldHost);
         SetupInputHandler(worldHost);
     }
@@ -53,6 +63,7 @@ public partial class MainWindow : Window
         MapRenderer = new MapRenderer(MapWidth, MapHeight, RenderScaling, zoomCalc, panCalc)
         {
             GetEntities = worldHost.GetEntities,
+            GetSelectedObjectId = () => worldHost.SelectedObjectId
         };
 
         InitRenderer(MapRenderer, worldHost, MapImage.InvalidateVisual);
@@ -63,6 +74,7 @@ public partial class MainWindow : Window
         MiniMapRenderer = new MiniMapRenderer(MiniMapWidth, MiniMapHeight, RenderScaling, zoomCalc, panCalc)
         {
             GetEntities = worldHost.GetEntities,
+            GetSelectedObjectId = () => worldHost.SelectedObjectId
         };
 
         InitRenderer(MiniMapRenderer, worldHost, MiniMapImage.InvalidateVisual);

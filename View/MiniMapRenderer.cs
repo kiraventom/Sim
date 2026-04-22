@@ -1,3 +1,4 @@
+using Sim.Host;
 using SkiaSharp;
 
 namespace Sim.View;
@@ -21,16 +22,10 @@ public class MiniMapRenderer : Renderer
         var bottom = (float)(top + size.Height) - 1;
 
         var rect = new SKRect(left, top, right, bottom);
-        DrawRect(canvas, rect, Brushes.Visor);
+        DrawRect(canvas, ref rect, Brushes.Visor);
     }
 
-    protected override void ApplyZoomPan(ref SKRect rect) 
-    {
-        // do not modify points directly
-    }
-
-    protected override void ApplyZoomPan(ref (SKPoint, SKPoint) rect) 
-    {
-        // do not modify points directly
-    }
+    protected override void ApplyZoomPan(ref SKRect rect) { }
+    protected override void ApplyZoomPan(ref (SKPoint, SKPoint) rect) { }
+    protected override void DrawInfo(SKCanvas canvas, SKRect rect, IHumanEntity humanEntity) {}
 }

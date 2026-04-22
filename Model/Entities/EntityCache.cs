@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Sim.Host;
 
 namespace Sim.Model.Entities;
@@ -6,7 +6,7 @@ namespace Sim.Model.Entities;
 internal class EntityCache
 {
     private readonly EntityBuilder _entBuilder;
-    private IReadOnlyCollection<IEntity> _latest;
+    private IReadOnlyList<IEntity> _latest;
 
     public EntityCache(World world, EntityBuilder entBuilder)
     {
@@ -14,7 +14,11 @@ internal class EntityCache
         _entBuilder = entBuilder;
     }
 
-    public IReadOnlyCollection<IEntity> GetEntities() => _latest;
+    public int Size => _latest.Count;
+
+    public IReadOnlyList<IEntity> GetEntities() => _latest;
+
+    public IEntity GetEntity(int selectedEntityIndex) => _latest[selectedEntityIndex];
 
     private void UpdateCache()
     {

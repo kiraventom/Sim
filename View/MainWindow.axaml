@@ -52,6 +52,12 @@
                     Name="MiniMapImage" 
                     RenderOptions.BitmapInterpolationMode="None" />
             </Border>
+
+            <TextBox
+                Grid.Row="1"
+                Margin="5"
+                Name="InfoText"
+                IsReadOnly="True"/>
         </Grid>
     </Grid>
 </Window>
