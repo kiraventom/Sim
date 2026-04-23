@@ -12,8 +12,8 @@ internal class Human : Movable
 
     public Human(int id) : base(id)
     {
-        const double SpeedModMin = 0.001;
-        const double SpeedModMax = 0.01;
+        const double SpeedModMin = 0.0003;
+        const double SpeedModMax = 0.003;
         Speed = RND.Double(SpeedModMin, SpeedModMax);
     }
 

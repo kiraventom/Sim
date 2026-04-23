@@ -12,7 +12,7 @@ namespace Sim.Host;
 
 internal class WorldHost : BackgroundService, IWorldHost
 {
-    private const int INTERVAL = 50;
+    private const int INTERVAL = (int)(1000.0 / 60);
     private readonly World _world;
     private readonly EntityCache _cache;
     private readonly ObjectInfoBuilder _infoBuilder;
