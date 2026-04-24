@@ -22,3 +22,7 @@ public interface ILineEntity : IEntity
 public interface IHumanEntity : IRectEntity
 {
 }
+
+public interface IObstacleEntity : IRectEntity
+{
+}

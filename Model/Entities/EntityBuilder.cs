@@ -28,6 +28,10 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
                     new HumanEntity(h.Id, absRect),
                     new LineEntity(id, absRect.Pos, p.Target.ToAbsPoint(settings)) 
                 ],
+                Obstacle o => 
+                [
+                    new ObstacleEntity(o.Id, absRect)
+                ]
             };
 
             entities.AddRange(entitiesToAdd);

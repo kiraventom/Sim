@@ -31,6 +31,7 @@ public class HostBuilder
     {
         var args = Environment.GetCommandLineArgs();
         int humans = _settings.HumansCount;
+        int obstacles = _settings.ObstaclesCount;
         int width = _settings.MapWidth;
         int height = _settings.MapHeight;
 
@@ -38,13 +39,15 @@ public class HostBuilder
         {
             if (args[i] == "--humans" && int.TryParse(args[i + 1], out int h)) 
                 humans = h;
+            else if (args[i] == "--obstacles" && int.TryParse(args[i + 1], out int o)) 
+                obstacles = o;
             else if (args[i] == "--width" && int.TryParse(args[i + 1], out int w)) 
                 width = w;
             else if (args[i] == "--height" && int.TryParse(args[i + 1], out int ht)) 
                 height = ht;
         }
 
-        _settings = new WorldSettings(humans, width, height);
+        _settings = new WorldSettings(humans, obstacles, width, height);
         return this;
     }
 

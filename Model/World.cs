@@ -23,22 +23,31 @@ internal class World
         Logger = logger;
         Map = map;
 
-        for (int i = 0; i < settings.HumansCount; ++i)
-        {
-            var id = Id.Generate(_objects);
-            var human = new Human(id);
-            _objects.Add(id, human);
-        }
+        var objs = GenerateObjects(settings);
 
-        foreach (var (id, obj) in _objects)
+        foreach (var obj in objs)
         {
             var pos = map.RandomFreePos();
             var rect = new Rect(pos, obj.Size);
-            if (map.TryPlace(id, rect))
-                Logger.LogTrace("Placed {Id} of size {Size} at {Pos}", id, obj.Size, pos);
+            if (map.TryPlace(obj.Id, rect))
+            {
+                _objects.Add(obj.Id, obj);
+                Logger.LogTrace("Placed {Id} of size {Size} at {Pos}", obj.Id, obj.Size, pos);
+            }
             else
-                Logger.LogError("Failed to place {Id} of size {Size} at {Pos}, skipping", id, obj.Size, pos);
+            {
+                Logger.LogError("Failed to place {Id} of size {Size} at {Pos}, skipping", obj.Id, obj.Size, pos);
+            }
         }
+    }
+
+    private IEnumerable<SimObject> GenerateObjects(WorldSettings settings)
+    {
+        for (int i = 0; i < settings.ObstaclesCount; ++i)
+            yield return new Obstacle(Id.Generate(_objects));
+
+        for (int i = 0; i < settings.HumansCount; ++i)
+            yield return new Human(Id.Generate(_objects));
     }
 
     internal void Tick()

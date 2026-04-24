@@ -8,7 +8,7 @@ namespace Sim.Model;
 
 internal class Map
 {
-    private const int AREAS_COUNT = 5;
+    private const int AREAS_COUNT = 3;
 
     private readonly Dictionary<int, Rect> _rects = [];
 
@@ -41,9 +41,10 @@ internal class Map
             return false;
         }
 
-        var area = GetArea(rect.Pos);
+        var areaIndexes = GetAreaIndexes(rect.Pos);
+        var area = GetArea(areaIndexes);
 
-        if (!CanPlace(area, rect))
+        if (!CanPlace(areaIndexes, rect))
         {
             Logger.LogDebug("Can't place {Id} to {Pos}, place is taken", id, rect.Pos);
             return false;
@@ -65,9 +66,11 @@ internal class Map
         var newRect = oldRect.Offset(offset);
 
         var oldArea = GetArea(oldRect.Pos);
-        var area = GetArea(newRect.Pos);
 
-        if (!CanPlace(area, newRect, id))
+        var areaIndexes = GetAreaIndexes(newRect.Pos);
+        var area = GetArea(areaIndexes);
+
+        if (!CanPlace(areaIndexes, newRect, id))
         {
             Logger.LogDebug("Can't move {Id} to {Pos}, place is taken", id, newRect.Pos);
             return false;
@@ -83,10 +86,16 @@ internal class Map
         return true;
     }
 
+    private HashSet<int> GetArea((int row, int column) x) => GetArea(x.row, x.column);
+
+    private HashSet<int> GetArea(int row, int column)
+    {
+        return _areas[row, column];
+    }
+
     private HashSet<int> GetArea(Point pos)
     {
-        var row = (int)Math.Floor(pos.X * AREAS_COUNT);
-        var column = (int)Math.Floor(pos.Y * AREAS_COUNT);
+        var (row, column) = GetAreaIndexes(pos);
 
         if (row < 0)
         {
@@ -112,12 +121,40 @@ internal class Map
             return null;
         }
 
-        return _areas[row, column];
+        return GetArea(row, column);
     }
 
-    private bool CanPlace(HashSet<int> area, Rect rect, int? id = null)
+    private (int row, int column) GetAreaIndexes(Point pos)
     {
-        foreach (var i in area)
+        var row = (int)Math.Floor(pos.X * AREAS_COUNT);
+        var column = (int)Math.Floor(pos.Y * AREAS_COUNT);
+
+        return (row, column);
+    }
+
+    private IEnumerable<HashSet<int>> GetAdjacentAreas(int row, int column)
+    {
+        for (int r = row - 1; r < AREAS_COUNT && r <= row + 1; ++r)
+        {
+            if (r < 0)
+                continue;
+
+            for (int c = column - 1; c < AREAS_COUNT && c <= column + 1; ++c)
+            {
+                if (c < 0)
+                    continue;
+
+                yield return GetArea(r, c);
+            }
+        }
+    }
+
+    private bool CanPlace((int row, int column) x, Rect rect, int? id = null) => CanPlace(x.row, x.column, rect, id);
+
+    private bool CanPlace(int row, int column, Rect rect, int? id = null)
+    {
+        var areas = GetAdjacentAreas(row, column);
+        foreach (var i in areas.SelectMany(i => i))
         {
             if (id.HasValue && id.Value == i)
                 continue;

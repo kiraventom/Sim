@@ -10,6 +10,7 @@ public static class Brushes
    public static SKPaint Unknown => new SKPaint { Color = SKColors.Pink };
    public static SKPaint Info => new SKPaint { Color = SKColors.White };
    public static SKPaint Human => new SKPaint { Color = SKColors.LightGreen };
+   public static SKPaint Obstacle => new SKPaint { Color = SKColors.Brown };
    public static SKPaint Line => new SKPaint 
    { 
        Color = SKColors.Blue.WithAlpha(80), 
@@ -32,6 +33,7 @@ public static class Brushes
             null => Brushes.Invalid,
             IHumanEntity => Brushes.Human,
             ILineEntity => Brushes.Line,
+            IObstacleEntity => Brushes.Obstacle,
             _ => Brushes.Unknown
         };
 

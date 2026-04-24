@@ -100,13 +100,13 @@ public abstract class Renderer
             var brush = Brushes.GetBrush(entity, isSelected);
             switch (entity)
             {
-                case IHumanEntity humanEntity:
-                    var rect = ToSKRect(humanEntity);
+                case IRectEntity rectEntity:
+                    var rect = ToSKRect(rectEntity);
                     ApplyRenderScale(ref rect);
                     DrawRect(canvas, ref rect, brush);
 
                     if (isSelected)
-                        DrawInfo(canvas, rect, humanEntity);
+                        DrawInfo(canvas, rect, rectEntity);
                     break;
 
                 case ILineEntity lineEntity:
@@ -118,9 +118,9 @@ public abstract class Renderer
         }
     }
 
-    protected virtual void DrawInfo(SKCanvas canvas, SKRect rect, IHumanEntity humanEntity)
+    protected virtual void DrawInfo(SKCanvas canvas, SKRect rect, IRectEntity rectEntity)
     {
-        var text = SKTextBlob.Create(humanEntity.ObjectId.ToString(), new SKFont(SKTypeface.CreateDefault()));
+        var text = SKTextBlob.Create(rectEntity.ObjectId.ToString(), new SKFont(SKTypeface.CreateDefault()));
         var textPoint = new SKPoint(rect.Left - text.Bounds.MidX, rect.Top - text.Bounds.Height / 2);
 
         canvas.DrawText(text, textPoint.X, textPoint.Y, Brushes.Info);

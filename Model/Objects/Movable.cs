@@ -4,7 +4,7 @@ namespace Sim.Model.Objects;
 
 internal abstract class Movable(int id) : SimObject(id)
 {
-    public const int ATTEMPTS_COUNT = 10;
+    public const int ATTEMPTS_COUNT = 5;
 
     public double Speed { get; protected init; }
     
