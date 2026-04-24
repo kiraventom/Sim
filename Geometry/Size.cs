@@ -10,6 +10,8 @@ public readonly struct Size(double width, double height)
     public double Height { get; } = height;
 
     public static Size operator *(Size a, Size b) => new Size(a.Width * b.Width, a.Height * b.Height);
+    public static bool operator ==(Size a, Size b) => a.Width == b.Width && a.Height == b.Height;
+    public static bool operator !=(Size a, Size b) => a.Width != b.Width || a.Height != b.Height;
 
     public bool IsInvalid() => double.IsNaN(Width) || double.IsNaN(Height);
 
@@ -19,6 +21,10 @@ public readonly struct Size(double width, double height)
 
     private readonly string _str = $"{width}x{height}";
     public override string ToString() => _str;
+
+    public override bool Equals(object obj) => obj is Size s && this == s;
+
+    public override int GetHashCode() => HashCode.Combine(Width, Height);
 }
 
 

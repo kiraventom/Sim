@@ -24,7 +24,7 @@ internal class Human : Movable
         _plans.TryDequeue(out _);
 
         if (_plans.Count == 0)
-            _plans.Enqueue(new Plan(currentPos, RND.Point(1, 1)));
+            _plans.Enqueue(new Plan(currentPos, RND.Point(1 - Size.Width, 1 - Size.Height)));
 
         return _plans.Peek().Target;
     }

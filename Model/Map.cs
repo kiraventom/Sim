@@ -41,6 +41,9 @@ internal class Map
             return false;
         }
 
+        if (!Rect.EnsureValid(ref rect))
+            Logger.LogWarning("{Rect} was adjusted to be valid", rect);
+
         var areaIndexes = GetAreaIndexes(rect.Pos);
         var area = GetArea(areaIndexes);
 
@@ -65,6 +68,9 @@ internal class Map
 
         var newRect = oldRect.Offset(offset);
 
+        if (!Rect.EnsureValid(ref newRect))
+            Logger.LogWarning("{NewRect} was adjusted to be valid", newRect);
+
         var oldArea = GetArea(oldRect.Pos);
 
         var areaIndexes = GetAreaIndexes(newRect.Pos);
@@ -87,42 +93,8 @@ internal class Map
     }
 
     private HashSet<int> GetArea((int row, int column) x) => GetArea(x.row, x.column);
-
-    private HashSet<int> GetArea(int row, int column)
-    {
-        return _areas[row, column];
-    }
-
-    private HashSet<int> GetArea(Point pos)
-    {
-        var (row, column) = GetAreaIndexes(pos);
-
-        if (row < 0)
-        {
-            Logger.LogError("Math.Floor({X} * {AreaCount}) == {row}, which is < 0", pos.X, AREAS_COUNT, row);
-            return null;
-        }
-
-        if (column < 0)
-        {
-            Logger.LogError("Math.Floor({Y} * {AreaCount}) == {column}, which is < 0", pos.Y, AREAS_COUNT, column);
-            return null;
-        }
-
-        if (row >= AREAS_COUNT)
-        {
-            Logger.LogError("Math.Floor({X} * {AreaCount}) == {row}, which is >= {AreaCount}", pos.X, AREAS_COUNT, row, AREAS_COUNT);
-            return null;
-        }
-
-        if (column >= AREAS_COUNT)
-        {
-            Logger.LogError("Math.Floor({Y} * {AreaCount}) == {column}, which is >= {AreaCount}", pos.Y, AREAS_COUNT, column, AREAS_COUNT);
-            return null;
-        }
-
-        return GetArea(row, column);
-    }
+    private HashSet<int> GetArea(int row, int column) => _areas[row, column];
+    private HashSet<int> GetArea(Point pos) => GetArea(GetAreaIndexes(pos));
 
     private (int row, int column) GetAreaIndexes(Point pos)
     {
