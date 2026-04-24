@@ -27,16 +27,21 @@ internal class World
 
         foreach (var obj in objs)
         {
-            var pos = map.RandomFreePos();
-            var rect = new Rect(pos, obj.Size);
+            var rect = map.RandomFreeRect(obj.Size);
+            if (rect.IsInvalid())
+            {
+                Logger.LogError("Failed to find free rect for size {Size}, skipping", obj.Size);
+                continue;
+            }
+
             if (map.TryPlace(obj.Id, rect))
             {
                 _objects.Add(obj.Id, obj);
-                Logger.LogTrace("Placed {Id} of size {Size} at {Pos}", obj.Id, obj.Size, pos);
+                Logger.LogTrace("Placed {Id} at {Rect}", obj.Id, rect);
             }
             else
             {
-                Logger.LogError("Failed to place {Id} of size {Size} at {Pos}, skipping", obj.Id, obj.Size, pos);
+                Logger.LogError("Failed to place {Id} at {Rect}, skipping", obj.Id, rect);
             }
         }
     }

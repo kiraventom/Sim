@@ -117,7 +117,7 @@ internal class Map
         return new RectI(new PointI(startCol, startRow), new SizeI(endCol - startCol, endRow - startRow));
     }
 
-    private bool CanPlace(RectI grid, Rect rect, int? id = null)
+    internal bool CanPlace(RectI grid, Rect rect, int? id = null)
     {
         for (int r = grid.Top; r <= grid.Bottom; ++r)
         {
