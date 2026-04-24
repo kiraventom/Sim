@@ -4,7 +4,6 @@ namespace Sim.Host;
 
 public interface IEntity
 {
-    int Priority { get; }
     int ObjectId { get; }
 }
 
@@ -17,12 +16,4 @@ public interface ILineEntity : IEntity
 {
     PointI A { get; }
     PointI B { get; }
-}
-
-public interface IHumanEntity : IRectEntity
-{
-}
-
-public interface IObstacleEntity : IRectEntity
-{
 }

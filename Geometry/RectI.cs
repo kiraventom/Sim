@@ -16,6 +16,3 @@ public readonly struct RectI(PointI pos, SizeI size)
     private readonly string _str = $"[{pos.X}:{pos.Y} {size.Width}x{size.Height}]";
     public override string ToString() => _str;
 }
-
-
-

@@ -45,7 +45,7 @@ public partial class MainWindow : Window
         {
             while (true)
             {
-                Dispatcher.Invoke(() => InfoText.Text = worldHost.GetInfo(worldHost.SelectedObjectId).Text);
+                Dispatcher.Invoke(() => InfoText.Text = worldHost.GetInfo(worldHost.SelectedObjectId));
                 await Task.Delay(100);
             }
         });
@@ -62,7 +62,7 @@ public partial class MainWindow : Window
         // Map
         MapRenderer = new MapRenderer(MapWidth, MapHeight, RenderScaling, zoomCalc, panCalc)
         {
-            GetEntities = worldHost.GetEntities,
+            GetSnapshot = worldHost.GetSnapshot,
             GetSelectedObjectId = () => worldHost.SelectedObjectId
         };
 
@@ -73,7 +73,7 @@ public partial class MainWindow : Window
         // MiniMap
         MiniMapRenderer = new MiniMapRenderer(MiniMapWidth, MiniMapHeight, RenderScaling, zoomCalc, panCalc)
         {
-            GetEntities = worldHost.GetEntities,
+            GetSnapshot = worldHost.GetSnapshot,
             GetSelectedObjectId = () => worldHost.SelectedObjectId
         };
 

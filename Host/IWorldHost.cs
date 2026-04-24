@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using Sim.Geometry;
+﻿using Sim.Geometry;
+using Sim.Model.Entities;
 
 namespace Sim.Host;
 
@@ -13,8 +13,9 @@ public interface IWorldHost
     void SelectPrevObject();
     bool SelectObject(int id);
 
-    IObjectInfo GetInfo(int id);
+    string GetInfo(int id);
 
     void TogglePause();
-    IReadOnlyList<IEntity> GetEntities();
+    
+    EntitySnapshot GetSnapshot(); 
 }

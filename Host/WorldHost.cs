@@ -42,7 +42,7 @@ internal class WorldHost : BackgroundService, IWorldHost
 
     public int SelectedObjectId => _selectedIndex >= 0 ? ObjectIds[_selectedIndex] : -1;
 
-    public IReadOnlyList<IEntity> GetEntities() => _cache.GetEntities();
+    public EntitySnapshot GetSnapshot() => _cache.GetSnapshot();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -77,6 +77,5 @@ internal class WorldHost : BackgroundService, IWorldHost
         return _selectedIndex >= 0;
     }
 
-    public IObjectInfo GetInfo(int id) => _infoBuilder.Build(_world.Objects.GetValueOrDefault(id));
+    public string GetInfo(int id) => _infoBuilder.Build(_world.Objects.GetValueOrDefault(id));
 }
-

@@ -2,13 +2,12 @@ using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Sim.Model;
 
 internal class Map
 {
-    private const int AREAS_COUNT = 3;
+    public const int AREAS_COUNT = 15;
 
     private readonly Dictionary<int, Rect> _rects = [];
 
@@ -23,12 +22,8 @@ internal class Map
         Logger = logger;
 
         for (int i = 0; i < AREAS_COUNT; ++i)
-        {
             for (int j = 0; j < AREAS_COUNT; ++j)
-            {
                 _areas[i, j] = new HashSet<int>();
-            }
-        }
     }
 
     public IReadOnlyDictionary<int, Rect> Rects => _rects;
@@ -44,17 +39,20 @@ internal class Map
         if (!Rect.EnsureValid(ref rect))
             Logger.LogWarning("{Rect} was adjusted to be valid", rect);
 
-        var areaIndexes = GetAreaIndexes(rect.Pos);
-        var area = GetArea(areaIndexes);
+        var grid = GetOverlappingGrid(rect);
 
-        if (!CanPlace(areaIndexes, rect))
+        if (!CanPlace(grid, rect))
         {
             Logger.LogDebug("Can't place {Id} to {Pos}, place is taken", id, rect.Pos);
             return false;
         }
 
         _rects.Add(id, rect);
-        area.Add(id);
+
+        for (int r = grid.Top; r <= grid.Bottom; ++r)
+            for (int c = grid.Left; c <= grid.Right; ++c)
+                _areas[r, c].Add(id);
+
         return true;
     }
 
@@ -71,12 +69,10 @@ internal class Map
         if (!Rect.EnsureValid(ref newRect))
             Logger.LogWarning("{NewRect} was adjusted to be valid", newRect);
 
-        var oldArea = GetArea(oldRect.Pos);
+        var oldGrid = GetOverlappingGrid(oldRect);
+        var newGrid = GetOverlappingGrid(newRect);
 
-        var areaIndexes = GetAreaIndexes(newRect.Pos);
-        var area = GetArea(areaIndexes);
-
-        if (!CanPlace(areaIndexes, newRect, id))
+        if (!CanPlace(newGrid, newRect, id))
         {
             Logger.LogDebug("Can't move {Id} to {Pos}, place is taken", id, newRect.Pos);
             return false;
@@ -84,57 +80,60 @@ internal class Map
 
         Logger.LogTrace("Changed {Id} pos from {Old} to {New}, {Offset}", id, oldRect.Pos, newRect.Pos, offset);
 
-        if (oldArea != area)
-            oldArea.Remove(id);
+        // TODO: move those to RectI
+        for (int r = oldGrid.Top; r <= oldGrid.Bottom; ++r)
+        {
+            for (int c = oldGrid.Left; c <= oldGrid.Right; ++c)
+            {
+                bool inNew = r >= newGrid.Top && r <= newGrid.Bottom && c >= newGrid.Left && c <= newGrid.Right;
+                if (!inNew)
+                    _areas[r, c].Remove(id);
+            }
+        }
 
         _rects[id] = newRect;
-        area.Add(id);
+
+        // TODO: move those to RectI
+        for (int r = newGrid.Top; r <= newGrid.Bottom; ++r)
+        {
+            for (int c = newGrid.Left; c <= newGrid.Right; ++c)
+            {
+                bool inOld = r >= oldGrid.Top && r <= oldGrid.Bottom && c >= oldGrid.Left && c <= oldGrid.Right;
+                if (!inOld)
+                    _areas[r, c].Add(id);
+            }
+        }
+
         return true;
     }
 
-    private HashSet<int> GetArea((int row, int column) x) => GetArea(x.row, x.column);
-    private HashSet<int> GetArea(int row, int column) => _areas[row, column];
-    private HashSet<int> GetArea(Point pos) => GetArea(GetAreaIndexes(pos));
-
-    private (int row, int column) GetAreaIndexes(Point pos)
+    internal RectI GetOverlappingGrid(Rect rect)
     {
-        var row = (int)Math.Floor(pos.X * AREAS_COUNT);
-        var column = (int)Math.Floor(pos.Y * AREAS_COUNT);
+        int startRow = Math.Clamp((int)Math.Floor(rect.Top * AREAS_COUNT), 0, AREAS_COUNT - 1);
+        int endRow = Math.Clamp((int)Math.Floor(rect.Bottom * AREAS_COUNT), 0, AREAS_COUNT - 1);
+        int startCol = Math.Clamp((int)Math.Floor(rect.Left * AREAS_COUNT), 0, AREAS_COUNT - 1);
+        int endCol = Math.Clamp((int)Math.Floor(rect.Right * AREAS_COUNT), 0, AREAS_COUNT - 1);
 
-        return (row, column);
+        return new RectI(new PointI(startCol, startRow), new SizeI(endCol - startCol, endRow - startRow));
     }
 
-    private IEnumerable<HashSet<int>> GetAdjacentAreas(int row, int column)
+    private bool CanPlace(RectI grid, Rect rect, int? id = null)
     {
-        for (int r = row - 1; r < AREAS_COUNT && r <= row + 1; ++r)
+        for (int r = grid.Top; r <= grid.Bottom; ++r)
         {
-            if (r < 0)
-                continue;
-
-            for (int c = column - 1; c < AREAS_COUNT && c <= column + 1; ++c)
+            for (int c = grid.Left; c <= grid.Right; ++c)
             {
-                if (c < 0)
-                    continue;
+                foreach (var existingId in _areas[r, c])
+                {
+                    if (id.HasValue && id.Value == existingId)
+                        continue;
 
-                yield return GetArea(r, c);
+                    if (_rects[existingId].Intersects(rect))
+                        return false;
+                }
             }
         }
-    }
 
-    private bool CanPlace((int row, int column) x, Rect rect, int? id = null) => CanPlace(x.row, x.column, rect, id);
-
-    private bool CanPlace(int row, int column, Rect rect, int? id = null)
-    {
-        var areas = GetAdjacentAreas(row, column);
-        foreach (var i in areas.SelectMany(i => i))
-        {
-            if (id.HasValue && id.Value == i)
-                continue;
-
-            if (_rects[i].Intersects(rect))
-                return false;
-        }
-    
         return true;
     }
 }

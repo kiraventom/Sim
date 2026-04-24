@@ -1,9 +1,8 @@
 ﻿using Avalonia.Platform;
 using Sim.Geometry;
-using Sim.Host;
+using Sim.Model.Entities;
 using SkiaSharp;
 using System;
-using System.Collections.Generic;
 
 namespace Sim.View;
 
@@ -17,7 +16,7 @@ public abstract class Renderer
     public ZoomCalculator ZoomCalc { get; }
     public PanCalculator PanCalc { get; }
 
-    public Func<IReadOnlyCollection<IEntity>> GetEntities { get; init; } = () => Array.Empty<IEntity>();
+    public Func<EntitySnapshot> GetSnapshot { get; init; } = () => new EntitySnapshot();
     public Func<int> GetSelectedObjectId { get; init; } = () => -1;
 
     protected Point RenderScale = new Point(1.0, 1.0);
@@ -64,8 +63,8 @@ public abstract class Renderer
 
     private void Draw(object sender, EventArgs e)
     {
-        var entities = GetEntities();
-        if (entities is null || entities.Count == 0)
+        var snapshot = GetSnapshot();
+        if (snapshot is null)
             return;
 
         var selectedObjectId = GetSelectedObjectId();
@@ -79,7 +78,7 @@ public abstract class Renderer
         canvas.Clear(SKColors.Black);
 
         DrawBackground(canvas);
-        DrawEntities(entities, selectedObjectId, canvas);
+        DrawEntities(snapshot, selectedObjectId, canvas);
 
         DrawInternal(canvas);
 
@@ -92,35 +91,61 @@ public abstract class Renderer
         DrawRect(canvas, ref rect, Brushes.Background);
     }
 
-    private void DrawEntities(IReadOnlyCollection<IEntity> entities, int selectedObjectId, SKCanvas canvas)
+    private void DrawEntities(EntitySnapshot snapshot, int selectedObjectId, SKCanvas canvas)
     {
-        foreach (var entity in entities)
+        foreach (var entity in snapshot.Obstacles)
         {
             var isSelected = entity.ObjectId == selectedObjectId;
-            var brush = Brushes.GetBrush(entity, isSelected);
-            switch (entity)
-            {
-                case IRectEntity rectEntity:
-                    var rect = ToSKRect(rectEntity);
-                    ApplyRenderScale(ref rect);
-                    DrawRect(canvas, ref rect, brush);
+            var brush = Brushes.GetObstacleBrush(isSelected);
+            
+            var rect = ToSKRect(entity.Rect);
+            ApplyRenderScale(ref rect);
+            DrawRect(canvas, ref rect, brush);
 
-                    if (isSelected)
-                        DrawInfo(canvas, rect, rectEntity);
-                    break;
+            if (isSelected)
+                DrawInfo(canvas, rect, entity.ObjectId);
+        }
 
-                case ILineEntity lineEntity:
-                    var points = ToSKPoints(lineEntity);
-                    ApplyRenderScale(ref points);
-                    DrawLine(canvas, points, brush);
-                    break;
-            }
+        foreach (var entity in snapshot.Lines)
+        {
+            var isSelected = entity.ObjectId == selectedObjectId;
+            var brush = Brushes.GetLineBrush(isSelected);
+
+            var points = ToSKPoints(entity.A, entity.B);
+            ApplyRenderScale(ref points);
+            DrawLine(canvas, points, brush);
+        }
+
+        foreach (var entity in snapshot.Areas)
+        {
+            var isSelected = entity.ObjectId == selectedObjectId;
+            if (!isSelected)
+                continue;
+
+            var brush = Brushes.GetAreaBrush();
+            
+            var rect = ToSKRect(entity.Rect);
+            ApplyRenderScale(ref rect);
+            DrawRect(canvas, ref rect, brush);
+        }
+
+        foreach (var entity in snapshot.Humans)
+        {
+            var isSelected = entity.ObjectId == selectedObjectId;
+            var brush = Brushes.GetHumanBrush(isSelected);
+            
+            var rect = ToSKRect(entity.Rect);
+            ApplyRenderScale(ref rect);
+            DrawRect(canvas, ref rect, brush);
+
+            if (isSelected)
+                DrawInfo(canvas, rect, entity.ObjectId);
         }
     }
 
-    protected virtual void DrawInfo(SKCanvas canvas, SKRect rect, IRectEntity rectEntity)
+    protected virtual void DrawInfo(SKCanvas canvas, SKRect rect, int objectId)
     {
-        var text = SKTextBlob.Create(rectEntity.ObjectId.ToString(), new SKFont(SKTypeface.CreateDefault()));
+        var text = SKTextBlob.Create(objectId.ToString(), new SKFont(SKTypeface.CreateDefault()));
         var textPoint = new SKPoint(rect.Left - text.Bounds.MidX, rect.Top - text.Bounds.Height / 2);
 
         canvas.DrawText(text, textPoint.X, textPoint.Y, Brushes.Info);
@@ -163,15 +188,15 @@ public abstract class Renderer
         brush.Color = brush.Color.WithAlpha(alpha);
     }
 
-    private SKRect ToSKRect(IRectEntity entity)
+    private SKRect ToSKRect(RectI rect)
     {
-        return new SKRect(entity.Rect.Left, entity.Rect.Top, entity.Rect.Right, entity.Rect.Bottom);
+        return new SKRect(rect.Left, rect.Top, rect.Right, rect.Bottom);
     }
 
-    private (SKPoint, SKPoint) ToSKPoints(ILineEntity entity)
+    private (SKPoint, SKPoint) ToSKPoints(PointI pA, PointI pB)
     {
-        var a = new SKPoint(entity.A.X, entity.A.Y);
-        var b = new SKPoint(entity.B.X, entity.B.Y);
+        var a = new SKPoint(pA.X, pA.Y);
+        var b = new SKPoint(pB.X, pB.Y);
         return (a, b);
     }
 
@@ -186,4 +211,3 @@ public abstract class Renderer
         points = (new SKPoint(a.X * (float)RenderScale.X, a.Y * (float)RenderScale.Y), new SKPoint(b.X * (float)RenderScale.X, b.Y * (float)RenderScale.Y));
     }
 }
-

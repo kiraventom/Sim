@@ -1,4 +1,3 @@
-using Sim.Host;
 using SkiaSharp;
 
 namespace Sim.View;
@@ -27,5 +26,5 @@ public class MiniMapRenderer : Renderer
 
     protected override void ApplyZoomPan(ref SKRect rect) { }
     protected override void ApplyZoomPan(ref (SKPoint, SKPoint) rect) { }
-    protected override void DrawInfo(SKCanvas canvas, SKRect rect, IRectEntity entity) {}
+    protected override void DrawInfo(SKCanvas canvas, SKRect rect, int objectId) {}
 }

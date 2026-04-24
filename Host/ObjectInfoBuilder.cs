@@ -7,17 +7,17 @@ namespace Sim.Host;
 
 internal class ObjectInfoBuilder(Map map, WorldSettings settings)
 {
-    public IObjectInfo Build(SimObject obj)
+    public string Build(SimObject obj)
     {
         if (obj is null)
-            return new NullInfo();
+            return new NullInfo().Text;
 
         var rect = map.Rects[obj.Id].ToAbsRect(settings);
 
         return obj switch
         {
-            Human h => new HumanInfo(h.Id, rect.Pos, h.Speed * settings.MapWidth, h.Plans.First().Start.ToAbsPoint(settings), h.Plans.First().Target.ToAbsPoint(settings)),
-            _ => new DefaultInfo(obj.Id)
+            Human h => new HumanInfo(h.Id, rect.Pos, h.Speed * settings.MapWidth, h.CurrentPlan.Start.ToAbsPoint(settings), h.CurrentPlan.Target.ToAbsPoint(settings)).Text,
+            _ => new DefaultInfo(obj.Id).Text
         };
     }
 }

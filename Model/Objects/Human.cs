@@ -8,7 +8,7 @@ internal class Human : Movable
 {
     private readonly Queue<Plan> _plans = [];
 
-    public IReadOnlyCollection<Plan> Plans => _plans;
+    public Plan CurrentPlan => _plans.Peek();
 
     public override Size Size => new Size(0.005, 0.005);
 
