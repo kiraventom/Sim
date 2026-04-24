@@ -32,6 +32,7 @@ public readonly struct Point(double x, double y)
         return new Point(X / len, Y / len);
     }
 
+    public Size ToSize() => new Size(X, Y);
     public PointI ToPointI() => new PointI((int)Math.Round(X), (int)Math.Round(Y));
 
     public override string ToString() => _str;

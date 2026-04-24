@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Sim.Geometry;
 using Sim.Model.Objects;
 using Sim.Utils;
 using System;
@@ -29,13 +30,14 @@ internal class World
             _objects.Add(id, human);
         }
 
-        foreach (var id in _objects.Keys)
+        foreach (var (id, obj) in _objects)
         {
             var pos = map.RandomFreePos();
-            if (map.TryPlace(id, pos))
-                Logger.LogTrace("Placed {Id} at {Pos}", id, pos);
+            var rect = new Rect(pos, obj.Size);
+            if (map.TryPlace(id, rect))
+                Logger.LogTrace("Placed {Id} of size {Size} at {Pos}", id, obj.Size, pos);
             else
-                Logger.LogError("Failed to place {Id} at {Pos}, skipping", id, pos);
+                Logger.LogError("Failed to place {Id} of size {Size} at {Pos}, skipping", id, obj.Size, pos);
         }
     }
 

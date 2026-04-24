@@ -165,11 +165,7 @@ public abstract class Renderer
 
     private SKRect ToSKRect(IRectEntity entity)
     {
-        var left = (float)entity.Pos.X;
-        var top = (float)entity.Pos.Y;
-        var right = left + entity.Size.Width;
-        var bottom = top + entity.Size.Height;
-        return new SKRect(left, top, right, bottom);
+        return new SKRect(entity.Rect.Left, entity.Rect.Top, entity.Rect.Right, entity.Rect.Bottom);
     }
 
     private (SKPoint, SKPoint) ToSKPoints(ILineEntity entity)

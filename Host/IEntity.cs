@@ -10,8 +10,7 @@ public interface IEntity
 
 public interface IRectEntity : IEntity
 {
-    SizeI Size { get; }
-    PointI Pos { get; }
+    RectI Rect { get; }
 }
 
 public interface ILineEntity : IEntity

@@ -33,7 +33,7 @@ internal abstract class Movable(int id) : SimObject(id)
         if (forceNew)
             _targetPos = Point.INVALID;
 
-        var pos = map[Id];
+        var pos = map[Id].Pos;
 
         if (HasReachedTarget(pos))
             _targetPos = GetNewTarget(map, pos);

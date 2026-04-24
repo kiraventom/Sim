@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using Sim.Geometry;
 using Sim.Host;
 using Sim.Model.Objects;
 
@@ -12,7 +11,7 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
     public IReadOnlyList<IEntity> BuildEntities()
     {
         List<IEntity> entities = [];
-        foreach (var (id, point) in map.Positions)
+        foreach (var (id, rect) in map.Rects)
         {
             if (!world.Objects.TryGetValue(id, out var obj))
             {
@@ -20,14 +19,14 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
                 continue;
             }
 
-            var absPoint = point.ToAbsPoint(settings);
+            var absRect = rect.ToAbsRect(settings);
 
             IReadOnlyCollection<IEntity> entitiesToAdd = obj switch
             {
                 Human h when h.Plans.First() is Plan p => 
                 [ 
-                    new HumanEntity(h.Id, new SizeI(1, 1), absPoint),
-                    new LineEntity(id, absPoint, p.Target.ToAbsPoint(settings)) 
+                    new HumanEntity(h.Id, absRect),
+                    new LineEntity(id, absRect.Pos, p.Target.ToAbsPoint(settings)) 
                 ],
             };
 

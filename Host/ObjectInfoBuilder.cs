@@ -1,4 +1,4 @@
-﻿using Sim.Model;
+using Sim.Model;
 using Sim.Model.Entities;
 using System.Linq;
 using Sim.Model.Objects;
@@ -12,11 +12,11 @@ internal class ObjectInfoBuilder(Map map, WorldSettings settings)
         if (obj is null)
             return new NullInfo();
 
-        var pos = map.Positions[obj.Id].ToAbsPoint(settings);
+        var rect = map.Rects[obj.Id].ToAbsRect(settings);
 
         return obj switch
         {
-            Human h => new HumanInfo(h.Id, pos, h.Speed * settings.MapWidth, h.Plans.First().Start.ToAbsPoint(settings), h.Plans.First().Target.ToAbsPoint(settings)),
+            Human h => new HumanInfo(h.Id, rect.Pos, h.Speed * settings.MapWidth, h.Plans.First().Start.ToAbsPoint(settings), h.Plans.First().Target.ToAbsPoint(settings)),
             _ => new DefaultInfo(obj.Id)
         };
     }

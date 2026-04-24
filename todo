@@ -1,2 +1,2 @@
-- zoom/pan
-- lines (paths/relations)
+- obstacles
+- a* pathfinding

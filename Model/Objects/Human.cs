@@ -10,9 +10,11 @@ internal class Human : Movable
 
     public IReadOnlyCollection<Plan> Plans => _plans;
 
+    public override Size Size => new Size(0.005, 0.005);
+
     public Human(int id) : base(id)
     {
-        const double SpeedModMin = 0.0003;
+        const double SpeedModMin = 0.0015;
         const double SpeedModMax = 0.003;
         Speed = RND.Double(SpeedModMin, SpeedModMax);
     }

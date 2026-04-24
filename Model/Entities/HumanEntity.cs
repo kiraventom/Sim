@@ -3,10 +3,9 @@ using Sim.Host;
 
 namespace Sim.Model.Entities;
 
-internal readonly struct HumanEntity(int id, SizeI size, PointI pos) : IHumanEntity
+internal readonly struct HumanEntity(int id, RectI rect) : IHumanEntity
 {
     public int Priority => 10;
     public int ObjectId => id;
-    public SizeI Size => size;
-    public PointI Pos => pos;
+    public RectI Rect => rect;
 }
