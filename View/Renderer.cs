@@ -96,7 +96,7 @@ public abstract class Renderer
         foreach (var entity in snapshot.Obstacles)
         {
             var isSelected = entity.ObjectId == selectedObjectId;
-            var brush = Brushes.GetObstacleBrush(isSelected);
+            var brush = isSelected ? Brushes.SelectedObstacle : Brushes.Obstacle;
             
             var rect = ToSKRect(entity.Rect);
             ApplyRenderScale(ref rect);
@@ -109,7 +109,7 @@ public abstract class Renderer
         foreach (var entity in snapshot.Lines)
         {
             var isSelected = entity.ObjectId == selectedObjectId;
-            var brush = Brushes.GetLineBrush(isSelected);
+            var brush = isSelected ? Brushes.SelectedLine : Brushes.Line;
 
             var points = ToSKPoints(entity.A, entity.B);
             ApplyRenderScale(ref points);
@@ -122,7 +122,7 @@ public abstract class Renderer
             if (!isSelected)
                 continue;
 
-            var brush = Brushes.GetAreaBrush();
+            var brush = Brushes.Area;
             
             var rect = ToSKRect(entity.Rect);
             ApplyRenderScale(ref rect);
@@ -132,7 +132,7 @@ public abstract class Renderer
         foreach (var entity in snapshot.Humans)
         {
             var isSelected = entity.ObjectId == selectedObjectId;
-            var brush = Brushes.GetHumanBrush(isSelected);
+            var brush = isSelected ? Brushes.SelectedHuman : Brushes.Human;
             
             var rect = ToSKRect(entity.Rect);
             ApplyRenderScale(ref rect);
@@ -145,7 +145,7 @@ public abstract class Renderer
 
     protected virtual void DrawInfo(SKCanvas canvas, SKRect rect, int objectId)
     {
-        var text = SKTextBlob.Create(objectId.ToString(), new SKFont(SKTypeface.CreateDefault()));
+        var text = SKTextBlob.Create(objectId.ToString(), Fonts.Info);
         var textPoint = new SKPoint(rect.Left - text.Bounds.MidX, rect.Top - text.Bounds.Height / 2);
 
         canvas.DrawText(text, textPoint.X, textPoint.Y, Brushes.Info);
@@ -158,10 +158,8 @@ public abstract class Renderer
         if (rect.Right < 0 || rect.Left > Width || rect.Bottom < 0 || rect.Top > Height)
             return;
 
-        ScaleSmallRect(ref rect, brush);
+        ScaleSmallRect(ref rect, ref brush);
         canvas.DrawRect(rect, brush);
-
-        brush.Dispose();
     }
 
     protected void DrawLine(SKCanvas canvas, (SKPoint, SKPoint) points, SKPaint brush)
@@ -170,11 +168,9 @@ public abstract class Renderer
 
         var (a, b) = points;
         canvas.DrawLine(a, b, brush);
-
-        brush.Dispose();
     }
 
-    private static void ScaleSmallRect(ref SKRect rect, SKPaint brush)
+    private static void ScaleSmallRect(ref SKRect rect, ref SKPaint brush)
     {
         float wRatio = rect.Width < 1 ? rect.Width : 1;
         float hRatio = rect.Height < 1 ? rect.Height : 1;
@@ -185,7 +181,8 @@ public abstract class Renderer
         rect.Inflate(wRatio < 1 ? (1 - rect.Width) / 2f : 0, hRatio < 1 ? (1 - rect.Height) / 2f : 0);
 
         var alpha = (byte)Math.Round(minRatio * 255);
-        brush.Color = brush.Color.WithAlpha(alpha);
+        if (alpha != brush.Color.Alpha)
+            brush = Brushes.ChangeColor(brush, brush.Color.WithAlpha(alpha));
     }
 
     private SKRect ToSKRect(RectI rect)
