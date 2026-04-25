@@ -11,7 +11,7 @@ internal class Map
 
     private readonly Dictionary<int, Rect> _rects = [];
 
-    private readonly HashSet<int>[,] _areas = new HashSet<int>[AREAS_COUNT, AREAS_COUNT];
+    private readonly List<int>[,] _areas = new List<int>[AREAS_COUNT, AREAS_COUNT];
 
     private ILogger<Map> Logger { get; }
 
@@ -23,7 +23,7 @@ internal class Map
 
         for (int i = 0; i < AREAS_COUNT; ++i)
             for (int j = 0; j < AREAS_COUNT; ++j)
-                _areas[i, j] = new HashSet<int>();
+                _areas[i, j] = new List<int>();
     }
 
     public IReadOnlyDictionary<int, Rect> Rects => _rects;

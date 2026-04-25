@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Sim.Model.Entities;
 
@@ -18,4 +18,22 @@ public class EntitySnapshot
     internal void Add(AreaEntity area) => _areas.Add(area);
     internal void Add(LineEntity line) => _lines.Add(line);
     internal void Add(HumanEntity human) => _humans.Add(human);
+
+    internal void Clear()
+    {
+        _areas.Clear();
+        _obstacles.Clear();
+        _lines.Clear();
+        _humans.Clear();
+    }
+
+    internal void CloneFrom(EntitySnapshot source)
+    {
+        Clear();
+
+        _areas.AddRange(source.Areas);
+        _obstacles.AddRange(source.Obstacles);
+        _lines.AddRange(source.Lines);
+        _humans.AddRange(source.Humans);
+    }
 }

@@ -7,6 +7,7 @@ using Sim.Geometry;
 using System.Collections.Generic;
 using Sim.Model.Entities;
 using System.Linq;
+using System;
 
 namespace Sim.Host;
 
@@ -42,16 +43,16 @@ internal class WorldHost : BackgroundService, IWorldHost
 
     public int SelectedObjectId => _selectedIndex >= 0 ? ObjectIds[_selectedIndex] : -1;
 
-    public EntitySnapshot GetSnapshot() => _cache.GetSnapshot();
+    public void UpdateSnapshot(EntitySnapshot snapshot) => _cache.UpdateSnapshot(snapshot);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(INTERVAL));
+
+        while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             if (!_isPaused)
                 _world.Tick();
-
-            await Task.Delay(INTERVAL, stoppingToken);
         }
     }
 

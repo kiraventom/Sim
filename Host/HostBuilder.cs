@@ -60,7 +60,7 @@ public class HostBuilder
             Directory.CreateDirectory(logsDirPath);
             var logFilePath = Path.Combine(logsDirPath, $"{PROJECT_NAME}.log");
 
-            l.MinimumLevel.Debug()
+            l.MinimumLevel.Error()
                 .WriteTo.Console()
                 .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day);
         });

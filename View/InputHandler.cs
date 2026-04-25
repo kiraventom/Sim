@@ -59,6 +59,10 @@ public class InputHandler(MainWindow window, IWorldHost worldHost, MapRenderer r
             case Key.Escape:
                 worldHost.SelectObject(-1);
                 return;
+
+            case Key.P:
+                renderer.ToggleLines();
+                return;
         }
     }
 }

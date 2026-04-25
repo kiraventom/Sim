@@ -17,5 +17,5 @@ public interface IWorldHost
 
     void TogglePause();
     
-    EntitySnapshot GetSnapshot(); 
+    void UpdateSnapshot(EntitySnapshot snapshot); 
 }

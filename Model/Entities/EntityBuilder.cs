@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using Sim.Model.Objects;
 
@@ -7,9 +6,9 @@ namespace Sim.Model.Entities;
 
 internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map)
 {
-    public EntitySnapshot BuildSnapshot()
+    public EntitySnapshot UpdateSnapshot(EntitySnapshot snapshot)
     {
-        var snapshot = new EntitySnapshot();
+        snapshot.Clear();
 
         foreach (var (id, rect) in map.Rects)
         {
@@ -19,7 +18,6 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
                 continue;
             }
 
-            var areas = GetAreas(id, rect);
             var absRect = rect.ToAbsRect(settings);
 
             switch (obj)
@@ -34,14 +32,13 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
                     break;
             }
 
-            foreach (var area in areas)
-                snapshot.Add(area);
+            AddAreas(snapshot, id, rect);
         }
 
         return snapshot;
     }
 
-    private IEnumerable<AreaEntity> GetAreas(int id, Rect rect)
+    private void AddAreas(EntitySnapshot snapshot, int id, Rect rect)
     {
         var grid = map.GetOverlappingGrid(rect);
         for (int r = grid.Top; r <= grid.Bottom; ++r)
@@ -52,7 +49,8 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
                 var areaSize = new Size(1.0 / Map.AREAS_COUNT, 1.0 / Map.AREAS_COUNT);
                 var areaRect = new Rect(areaPos, areaSize);
                 var areaAbsRect = areaRect.ToAbsRect(settings);
-                yield return new AreaEntity(id, areaAbsRect);
+                var area = new AreaEntity(id, areaAbsRect);
+                snapshot.Add(area);
             }
         }
     }

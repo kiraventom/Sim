@@ -13,13 +13,16 @@ public abstract class Renderer
     private readonly Avalonia.Media.Imaging.WriteableBitmap _bitmap;
     private readonly Avalonia.Threading.DispatcherTimer _timer;
 
+    private readonly EntitySnapshot _snapshot = new();
+
     public ZoomCalculator ZoomCalc { get; }
     public PanCalculator PanCalc { get; }
 
-    public Func<EntitySnapshot> GetSnapshot { get; init; } = () => new EntitySnapshot();
+    public Action<EntitySnapshot> UpdateSnapshot { get; init; } = (_) => { };
     public Func<int> GetSelectedObjectId { get; init; } = () => -1;
 
     protected Point RenderScale = new Point(1.0, 1.0);
+    protected virtual bool DrawLines { get; private set; } = false;
 
     public int Width { get; }
     public int Height { get; }
@@ -45,6 +48,8 @@ public abstract class Renderer
 
     public void SetRenderScale(Point renderScale) => RenderScale = renderScale;
 
+    public void ToggleLines() => DrawLines = !DrawLines;
+
     protected virtual void DrawInternal(SKCanvas canvas)
     {
     }
@@ -63,9 +68,7 @@ public abstract class Renderer
 
     private void Draw(object sender, EventArgs e)
     {
-        var snapshot = GetSnapshot();
-        if (snapshot is null)
-            return;
+        UpdateSnapshot(_snapshot);
 
         var selectedObjectId = GetSelectedObjectId();
 
@@ -78,7 +81,7 @@ public abstract class Renderer
         canvas.Clear(SKColors.Black);
 
         DrawBackground(canvas);
-        DrawEntities(snapshot, selectedObjectId, canvas);
+        DrawEntities(selectedObjectId, canvas);
 
         DrawInternal(canvas);
 
@@ -91,13 +94,13 @@ public abstract class Renderer
         DrawRect(canvas, ref rect, Brushes.Background);
     }
 
-    private void DrawEntities(EntitySnapshot snapshot, int selectedObjectId, SKCanvas canvas)
+    private void DrawEntities(int selectedObjectId, SKCanvas canvas)
     {
-        foreach (var entity in snapshot.Obstacles)
+        foreach (var entity in _snapshot.Obstacles)
         {
             var isSelected = entity.ObjectId == selectedObjectId;
             var brush = isSelected ? Brushes.SelectedObstacle : Brushes.Obstacle;
-            
+
             var rect = ToSKRect(entity.Rect);
             ApplyRenderScale(ref rect);
             DrawRect(canvas, ref rect, brush);
@@ -106,34 +109,37 @@ public abstract class Renderer
                 DrawInfo(canvas, rect, entity.ObjectId);
         }
 
-        foreach (var entity in snapshot.Lines)
+        if (DrawLines)
         {
-            var isSelected = entity.ObjectId == selectedObjectId;
-            var brush = isSelected ? Brushes.SelectedLine : Brushes.Line;
+            foreach (var entity in _snapshot.Lines)
+            {
+                var isSelected = entity.ObjectId == selectedObjectId;
+                var brush = isSelected ? Brushes.SelectedLine : Brushes.Line;
 
-            var points = ToSKPoints(entity.A, entity.B);
-            ApplyRenderScale(ref points);
-            DrawLine(canvas, points, brush);
+                var points = ToSKPoints(entity.A, entity.B);
+                ApplyRenderScale(ref points);
+                DrawLine(canvas, points, brush);
+            }
         }
 
-        foreach (var entity in snapshot.Areas)
+        foreach (var entity in _snapshot.Areas)
         {
             var isSelected = entity.ObjectId == selectedObjectId;
             if (!isSelected)
                 continue;
 
             var brush = Brushes.Area;
-            
+
             var rect = ToSKRect(entity.Rect);
             ApplyRenderScale(ref rect);
             DrawRect(canvas, ref rect, brush);
         }
 
-        foreach (var entity in snapshot.Humans)
+        foreach (var entity in _snapshot.Humans)
         {
             var isSelected = entity.ObjectId == selectedObjectId;
             var brush = isSelected ? Brushes.SelectedHuman : Brushes.Human;
-            
+
             var rect = ToSKRect(entity.Rect);
             ApplyRenderScale(ref rect);
             DrawRect(canvas, ref rect, brush);
@@ -145,7 +151,7 @@ public abstract class Renderer
 
     protected virtual void DrawInfo(SKCanvas canvas, SKRect rect, int objectId)
     {
-        var text = SKTextBlob.Create(objectId.ToString(), Fonts.Info);
+        using var text = SKTextBlob.Create(objectId.ToString(), Fonts.Info);
         var textPoint = new SKPoint(rect.Left - text.Bounds.MidX, rect.Top - text.Bounds.Height / 2);
 
         canvas.DrawText(text, textPoint.X, textPoint.Y, Brushes.Info);

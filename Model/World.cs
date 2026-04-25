@@ -62,7 +62,7 @@ internal class World
             if (obj is Movable movable)
             {
                 if (!movable.Move(Map))
-                    Logger.LogError("Failed to move {Id} after {Att} attempts, skipping", obj.Id, Movable.ATTEMPTS_COUNT);
+                    Logger.LogWarning("Failed to move {Id} after {Att} attempts, skipping", obj.Id, Movable.ATTEMPTS_COUNT);
             }
         }
 
