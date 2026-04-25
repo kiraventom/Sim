@@ -58,6 +58,9 @@ internal class Map
 
     public bool TryMove(int id, Point offset)
     {
+        if (offset.IsZero())
+            return true;
+        
         if (!_rects.TryGetValue(id, out var oldRect))
         {
             Logger.LogDebug("Can't move {Id}, {Id} is not placed on map", id, id);

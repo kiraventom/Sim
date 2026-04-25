@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Sim.Geometry;
 using Sim.Utils;
 
@@ -6,26 +5,22 @@ namespace Sim.Model.Objects;
 
 internal class Human : Movable
 {
-    private readonly Queue<Plan> _plans = [];
-
-    public Plan CurrentPlan => _plans.Peek();
+    private Map Map { get; }
 
     public override Size Size => new Size(0.005, 0.005);
 
-    public Human(int id) : base(id)
+    public Human(Map map, Pathfinder pathfinder, int id) : base(pathfinder, id)
     {
         const double SpeedModMin = 0.0015;
         const double SpeedModMax = 0.003;
         Speed = RND.Double(SpeedModMin, SpeedModMax);
+
+        Map = map;
     }
 
-    protected override Point GetNewTarget(Map map, Point currentPos)
+    protected override Point GetNewTarget(Point pos)
     {
-        _plans.TryDequeue(out _);
-
-        if (_plans.Count == 0)
-            _plans.Enqueue(new Plan(currentPos, RND.Point(1 - Size.Width, 1 - Size.Height)));
-
-        return _plans.Peek().Target;
+        // TEMP
+        return Map.RandomFreeRect(Size).Pos;
     }
 }

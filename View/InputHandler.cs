@@ -1,7 +1,6 @@
 using Avalonia.Input;
 using Sim.Geometry;
 using Sim.Host;
-using SkiaSharp;
 
 namespace Sim.View;
 
@@ -57,7 +56,7 @@ public class InputHandler(MainWindow window, IWorldHost worldHost, MapRenderer r
                 return;
 
             case Key.Escape:
-                worldHost.SelectObject(-1);
+                worldHost.UnselectObject();
                 return;
 
             case Key.P:

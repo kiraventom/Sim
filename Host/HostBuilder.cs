@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using static System.Environment;
 using Sim.Model;
-using Sim.View;
 using Sim.Model.Entities;
 
 namespace Sim.Host;
@@ -91,6 +90,10 @@ public class HostBuilder
             .AddSingleton<ObjectInfoBuilder>()
             .AddSingleton<EntityBuilder>()
             .AddSingleton<EntityCache>()
+            .AddSingleton<IdContainer>()
+            .AddSingleton<Pathfinder>()
+            .AddSingleton<HumanFactory>()
+            .AddSingleton<ObstacleFactory>()
             .AddHostedService<WorldHost>();
 
         var host = _builder.Build();

@@ -1,4 +1,4 @@
-﻿using Sim.Geometry;
+using Sim.Geometry;
 using Sim.Model.Entities;
 
 namespace Sim.Host;
@@ -11,11 +11,11 @@ public interface IWorldHost
 
     void SelectNextObject();
     void SelectPrevObject();
-    bool SelectObject(int id);
 
     string GetInfo(int id);
 
     void TogglePause();
     
-    void UpdateSnapshot(EntitySnapshot snapshot); 
+    void UpdateSnapshot(EntitySnapshot snapshot);
+    void UnselectObject();
 }

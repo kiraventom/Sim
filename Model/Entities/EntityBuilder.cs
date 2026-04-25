@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using Sim.Model.Objects;
 
@@ -22,11 +22,22 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
 
             switch (obj)
             {
-                case Human h when h.CurrentPlan is Plan p:
+                case Human h when h.Movement is Movement m:
                     snapshot.Add(new HumanEntity(h.Id, absRect));
-                    snapshot.Add(new LineEntity(id, absRect.Pos, p.Target.ToAbsPoint(settings)));
 
+                    var prevPoint = absRect.Pos;
+                    foreach (var point in m.Points)
+                    {
+                        var absPoint = point.ToAbsPoint(settings);
+                        snapshot.Add(new LineEntity(id, prevPoint, absPoint));
+                        prevPoint = absPoint;
+                    }
                     break;
+
+                case Human h:
+                    snapshot.Add(new HumanEntity(h.Id, absRect));
+                    break;
+
                 case Obstacle o:
                     snapshot.Add(new ObstacleEntity(o.Id, absRect));
                     break;
