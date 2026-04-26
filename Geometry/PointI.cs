@@ -9,7 +9,6 @@ public readonly struct PointI(int x, int y)
 
     public int X { get; } = x;
     public int Y { get; } = y;
-    private readonly string _str = $"[{x},{y}]";
 
     public static PointI operator +(PointI a, PointI b) => new PointI(a.X + b.X, a.Y + b.Y);
     public static PointI operator -(PointI a, PointI b) => new PointI(a.X - b.X, a.Y - b.Y);
@@ -32,7 +31,7 @@ public readonly struct PointI(int x, int y)
         return new Point(X / len, Y / len);
     }
 
-    public override string ToString() => _str;
+    public override string ToString() => $"[{X},{Y}]";
 
     public override bool Equals(object obj) => obj is PointI point && this == point;
     public override int GetHashCode() => HashCode.Combine(X, Y);

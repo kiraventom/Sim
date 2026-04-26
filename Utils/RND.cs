@@ -1,4 +1,4 @@
-using Sim.Geometry;
+﻿using Sim.Geometry;
 using System;
 
 namespace Sim.Utils;
@@ -7,9 +7,19 @@ public static class RND
 {
     private static Random _rnd;
 
+    public static int Seed { get; private set; }
+
     static RND()
     {
-        _rnd = new Random();
+        var randomSeed = Random.Shared.Next();
+        _rnd = new Random(randomSeed);
+        Seed = randomSeed;
+    }
+
+    public static void SetSeed(int seed)
+    {
+        _rnd = new Random(seed);
+        Seed = seed;
     }
 
     public static bool Bool() => _rnd.Next(2) == 1;

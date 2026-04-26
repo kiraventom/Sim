@@ -1,0 +1,19 @@
+{
+  "adapters": {
+    "netcoredbg": {
+      "command": [ "netcoredbg", "--interpreter=vscode" ]
+    }
+  },
+  "configurations": {
+    "launch": {
+      "adapter": "netcoredbg",
+      "configuration": {
+        "request": "launch",
+        "program": "${workspaceRoot}/bin/Debug/net10.0/Sim.dll",
+        "args": [ "--humans", "1", "--obstacles", "10", "--width", "1600", "--height", "1600", "--seed", "607658523" ],
+        "stopAtEntry": false,
+        "cwd": "${workspaceRoot}"
+      }
+    }
+  }
+}

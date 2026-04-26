@@ -1,25 +1,15 @@
-using Sim.Geometry;
+﻿using Sim.Geometry;
 
 namespace Sim.Model.Objects;
 
-internal abstract class Movable(Pathfinder pathfinder, int id) : SimObject(id)
+internal abstract class Movable(PathBuilder pathBuilder, int id) : SimObject(id)
 {
     public double Speed { get; protected init; }
 
-    public Movement Movement { get; private set; }
+    public Path Path { get; } = new();
 
-    public Point GetMoveOffset(Point pos)
+    internal Point GetDirectMoveOffset(Point pos, Point targetPos)
     {
-        if (HasReachedTarget(pos))
-        {
-            var target = GetNewTarget(pos);
-            Movement = new Movement(pos, target);
-        }
-
-        pathfinder.CorrectMovement(this, pos);
-
-        var targetPos = Movement.GetTarget();
-
         var traj = targetPos - pos;
         var direction = traj.Normalize();
 
@@ -31,8 +21,26 @@ internal abstract class Movable(Pathfinder pathfinder, int id) : SimObject(id)
         return offset;
     }
 
+    public Point GetMoveOffset(Point pos)
+    {
+        if (HasReachedTarget(pos))
+        {
+            Path.OnTargetReached();
+
+            if (Path.IsCovered)
+            {
+                var target = GetNewTarget(pos);
+                Path.New(pos, target);
+                pathBuilder.BuildPath(this);
+            }
+        }
+
+        var targetPos = Path.TargetPoint;
+        return GetDirectMoveOffset(pos, targetPos);
+    }
+
     protected abstract Point GetNewTarget(Point pos);
 
-    protected bool HasReachedTarget(Point currentPos) => Movement is null || currentPos == Movement.End;
+    protected bool HasReachedTarget(Point currentPos) => Path.IsCovered || new Rect(currentPos, new Size(0.0001, 0.0001)).Intersects(new Rect(Path.TargetPoint, new Size(0.0001, 0.0001)));
 }
 

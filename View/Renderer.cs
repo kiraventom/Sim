@@ -22,7 +22,7 @@ public abstract class Renderer
     public Func<int> GetSelectedObjectId { get; init; } = () => -1;
 
     protected Point RenderScale = new Point(1.0, 1.0);
-    protected virtual bool DrawLines { get; private set; } = false;
+    protected virtual bool DrawLines { get; private set; } = true;
 
     public int Width { get; }
     public int Height { get; }
@@ -114,7 +114,15 @@ public abstract class Renderer
             foreach (var entity in _snapshot.Lines)
             {
                 var isSelected = entity.ObjectId == selectedObjectId;
-                var brush = isSelected ? Brushes.SelectedLine : Brushes.Line;
+                var brush = entity switch
+                {
+                    {} when entity.IsMainPath && isSelected => Brushes.SelectedMainPathLine,
+                    {} when entity.IsMainPath => Brushes.MainPathLine,
+                    {} when entity.IsAltPath && isSelected => Brushes.SelectedAltPathLine,
+                    {} when entity.IsAltPath => Brushes.AltPathLine,
+                    {} when isSelected => Brushes.SelectedLine,
+                    _ => Brushes.Line
+                };
 
                 var points = ToSKPoints(entity.A, entity.B);
                 ApplyRenderScale(ref points);

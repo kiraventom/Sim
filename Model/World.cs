@@ -1,4 +1,5 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Sim.Geometry;
 using Sim.Model.Objects;
 using System;
 using System.Collections.Generic;

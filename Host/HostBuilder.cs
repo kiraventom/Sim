@@ -6,6 +6,7 @@ using System.IO;
 using static System.Environment;
 using Sim.Model;
 using Sim.Model.Entities;
+using Sim.Utils;
 
 namespace Sim.Host;
 
@@ -44,6 +45,8 @@ public class HostBuilder
                 width = w;
             else if (args[i] == "--height" && int.TryParse(args[i + 1], out int ht)) 
                 height = ht;
+            else if (args[i] == "--seed" && int.TryParse(args[i + 1], out int s))
+                RND.SetSeed(s);
         }
 
         _settings = new WorldSettings(humans, obstacles, width, height);
@@ -59,7 +62,7 @@ public class HostBuilder
             Directory.CreateDirectory(logsDirPath);
             var logFilePath = Path.Combine(logsDirPath, $"{PROJECT_NAME}.log");
 
-            l.MinimumLevel.Error()
+            l.MinimumLevel.Information()
                 .WriteTo.Console()
                 .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day);
         });
@@ -86,12 +89,13 @@ public class HostBuilder
         _builder.Services
             .AddSingleton<WorldSettings>(_settings)
             .AddSingleton<Map>()
+            .AddSingleton<RaycasterFactory>()
             .AddSingleton<World>()
             .AddSingleton<ObjectInfoBuilder>()
+            .AddSingleton<PathBuilder>()
             .AddSingleton<EntityBuilder>()
             .AddSingleton<EntityCache>()
             .AddSingleton<IdContainer>()
-            .AddSingleton<Pathfinder>()
             .AddSingleton<HumanFactory>()
             .AddSingleton<ObstacleFactory>()
             .AddHostedService<WorldHost>();
@@ -99,6 +103,7 @@ public class HostBuilder
         var host = _builder.Build();
 
         Log.Logger = host.Services.GetRequiredService<ILogger>();
+        Log.Logger.Information("Seed: {Seed}", RND.Seed);
         return host;
     }
 }

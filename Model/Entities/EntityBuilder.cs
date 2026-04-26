@@ -1,10 +1,11 @@
+﻿using System;
 using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using Sim.Model.Objects;
 
 namespace Sim.Model.Entities;
 
-internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map)
+internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map, PathBuilder DBG_Pathfinder)
 {
     public EntitySnapshot UpdateSnapshot(EntitySnapshot snapshot)
     {
@@ -18,19 +19,24 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
                 continue;
             }
 
-            var absRect = rect.ToAbsRect(settings);
+            var absRect = rect.ToEntityRect(settings);
 
             switch (obj)
             {
-                case Human h when h.Movement is Movement m:
-                    snapshot.Add(new HumanEntity(h.Id, absRect));
+                case Human human when human.Path is Path path:
+                    snapshot.Add(new HumanEntity(human.Id, absRect));
 
-                    var prevPoint = absRect.Pos;
-                    foreach (var point in m.Points)
+                    var node = path.StartNode;
+                    while (true)
                     {
-                        var absPoint = point.ToAbsPoint(settings);
-                        snapshot.Add(new LineEntity(id, prevPoint, absPoint));
-                        prevPoint = absPoint;
+                        var nextNode = node.Next;
+                        if (nextNode is null)
+                            break;
+
+                        var pointA = node.Value.ToEntityPoint(settings);
+                        var pointB = nextNode.Value.ToEntityPoint(settings);
+                        snapshot.Add(new LineEntity(id, pointA, pointB, isMainPath: true));
+                        node = node.Next;
                     }
                     break;
 
@@ -51,15 +57,15 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
 
     private void AddAreas(EntitySnapshot snapshot, int id, Rect rect)
     {
-        var grid = map.GetOverlappingGrid(rect);
+        var grid = map.GetAreaGrid(rect);
         for (int r = grid.Top; r <= grid.Bottom; ++r)
         {
             for (int c = grid.Left; c <= grid.Right; ++c)
             {
-                var areaPos = new Point((double)c / Map.AREAS_COUNT, (double)r / Map.AREAS_COUNT);
                 var areaSize = new Size(1.0 / Map.AREAS_COUNT, 1.0 / Map.AREAS_COUNT);
+                var areaPos = new Point((double)c / Map.AREAS_COUNT + areaSize.Width / 2, (double)r / Map.AREAS_COUNT + areaSize.Height / 2);
                 var areaRect = new Rect(areaPos, areaSize);
-                var areaAbsRect = areaRect.ToAbsRect(settings);
+                var areaAbsRect = areaRect.ToEntityRect(settings);
                 var area = new AreaEntity(id, areaAbsRect);
                 snapshot.Add(area);
             }
