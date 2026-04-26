@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Sim.Geometry;
 
@@ -14,11 +15,25 @@ public readonly struct Rect(Point pos, Size size)
     public double Top => Pos.Y;
     public double Bottom => Pos.Y + Size.Height;
 
+    public Point Center => Pos + new Size(Width / 2, Height / 2);
+    public Point TopLeft => new Point(Left, Top);
+    public Point TopRight => new Point(Right, Top);
+    public Point BottomLeft => new Point(Left, Bottom);
+    public Point BottomRight => new Point(Right, Bottom);
+
     public double Width => Size.Width;
     public double Height => Size.Height;
 
     public static bool operator ==(Rect a, Rect b) => a.Pos == b.Pos && a.Size == b.Size;
     public static bool operator !=(Rect a, Rect b) => a.Pos != b.Pos || a.Size != b.Size;
+
+    public IEnumerable<Point> GetPoints()
+    {
+        yield return TopLeft;
+        yield return TopRight;
+        yield return BottomLeft;
+        yield return BottomRight;
+    }
 
     public bool IsInvalid() => Pos.IsInvalid() || Size.IsInvalid();
 
@@ -57,4 +72,23 @@ public readonly struct Rect(Point pos, Size size)
     public override bool Equals(object obj) => obj is Rect r && r == this;
 
     public override int GetHashCode() => HashCode.Combine(Pos, Size);
-}
+
+    internal static (Point, Point) GetDirectVector(Rect a, Rect b)
+    {
+        var (x1, x2) = GetClosest1D(a.Left, a.Right, b.Left, b.Right);
+        var (y1, y2) = GetClosest1D(a.Top, a.Bottom, b.Top, b.Bottom);
+
+        return (new Point(x1, y1), new Point(x2, y2));
+    }
+
+    private static (double, double) GetClosest1D(double aMin, double aMax, double bMin, double bMax)
+    {
+        if (aMax <= bMin) 
+            return (aMax, bMin);
+
+        if (bMax <= aMin) 
+            return (aMin, bMax);
+
+        double overlapCenter = (Math.Max(aMin, bMin) + Math.Min(aMax, bMax)) / 2.0;
+        return (overlapCenter, overlapCenter);
+    }}

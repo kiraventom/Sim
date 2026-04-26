@@ -16,9 +16,9 @@ internal abstract class Movable(Pathfinder pathfinder, int id) : SimObject(id)
             Movement = new Movement(pos, target);
         }
 
-        pathfinder.CorrectMovement(this, pos);
-
         var targetPos = Movement.GetTarget();
+
+        targetPos = pathfinder.GetAdjustedTarget(this, targetPos);
 
         var traj = targetPos - pos;
         var direction = traj.Normalize();

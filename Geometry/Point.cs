@@ -18,6 +18,8 @@ public readonly struct Point(double x, double y)
     public static bool operator ==(Point a, Point b) => a.X == b.X && a.Y == b.Y;
     public static bool operator !=(Point a, Point b) => a.X != b.X || a.Y != b.Y;
 
+    public static Point operator +(Point a, Size b) => new Point(a.X + b.Width, a.Y + b.Height);
+
     public double Length => IsZero() ? 0 : Math.Sqrt(X * X + Y * Y);
 
     public bool IsZero() => X == 0 && Y == 0;

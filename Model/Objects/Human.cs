@@ -12,7 +12,8 @@ internal class Human : Movable
     public Human(Map map, Pathfinder pathfinder, int id) : base(pathfinder, id)
     {
         const double SpeedModMin = 0.0015;
-        const double SpeedModMax = 0.003;
+        const double SpeedModMax = 0.0015;
+        // const double SpeedModMax = 0.003;
         Speed = RND.Double(SpeedModMin, SpeedModMax);
 
         Map = map;
@@ -21,6 +22,6 @@ internal class Human : Movable
     protected override Point GetNewTarget(Point pos)
     {
         // TEMP
-        return Map.RandomFreeRect(Size).Pos;
+        return Map.RandomFreeRect(Size).Center;
     }
 }

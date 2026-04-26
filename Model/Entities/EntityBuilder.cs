@@ -1,10 +1,11 @@
+using System;
 using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using Sim.Model.Objects;
 
 namespace Sim.Model.Entities;
 
-internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map)
+internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map, Pathfinder DBG_Pathfinder)
 {
     public EntitySnapshot UpdateSnapshot(EntitySnapshot snapshot)
     {
@@ -24,14 +25,38 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
             {
                 case Human h when h.Movement is Movement m:
                     snapshot.Add(new HumanEntity(h.Id, absRect));
+                    snapshot.Add(new LineEntity(id, absRect.Pos, m.GetTarget().ToAbsPoint(settings), isMainPath: true));
 
-                    var prevPoint = absRect.Pos;
-                    foreach (var point in m.Points)
+                    // DBG
                     {
-                        var absPoint = point.ToAbsPoint(settings);
-                        snapshot.Add(new LineEntity(id, prevPoint, absPoint));
-                        prevPoint = absPoint;
+                        var adjustedTarget = DBG_Pathfinder.GetAdjustedTarget(h, m.GetTarget());
+                        if (adjustedTarget != m.GetTarget())
+                        {
+                            snapshot.Add(new LineEntity(id, absRect.Pos, adjustedTarget.ToAbsPoint(settings), isAltPath: true));
+                        }
+
+                        var maxDist = DBG_Pathfinder.GetMaxPushDistance(h);
+                        var grid = DBG_Pathfinder.GetLookAroundGrid(rect);
+                        var areas = map.GetAreasByGrid(grid);
+                        foreach (var area in areas)
+                        {
+                            var ids = area.ObjectIds;
+                            foreach (var objId in ids)
+                            {
+                                if (objId == id)
+                                    continue;
+
+                                var objRect = map[objId];
+                                var (a, b) = Rect.GetDirectVector(rect, objRect);
+                                var distVec = (a - b);
+                                if (distVec.Length > maxDist)
+                                    continue;
+
+                                snapshot.Add(new LineEntity(id, a.ToAbsPoint(settings), b.ToAbsPoint(settings)));
+                            }
+                        }
                     }
+                    
                     break;
 
                 case Human h:
@@ -51,7 +76,7 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
 
     private void AddAreas(EntitySnapshot snapshot, int id, Rect rect)
     {
-        var grid = map.GetOverlappingGrid(rect);
+        var grid = map.GetAreaGrid(rect);
         for (int r = grid.Top; r <= grid.Bottom; ++r)
         {
             for (int c = grid.Left; c <= grid.Right; ++c)

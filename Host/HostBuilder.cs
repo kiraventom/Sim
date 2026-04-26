@@ -59,7 +59,7 @@ public class HostBuilder
             Directory.CreateDirectory(logsDirPath);
             var logFilePath = Path.Combine(logsDirPath, $"{PROJECT_NAME}.log");
 
-            l.MinimumLevel.Error()
+            l.MinimumLevel.Information()
                 .WriteTo.Console()
                 .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day);
         });
@@ -88,10 +88,10 @@ public class HostBuilder
             .AddSingleton<Map>()
             .AddSingleton<World>()
             .AddSingleton<ObjectInfoBuilder>()
+            .AddSingleton<Pathfinder>()
             .AddSingleton<EntityBuilder>()
             .AddSingleton<EntityCache>()
             .AddSingleton<IdContainer>()
-            .AddSingleton<Pathfinder>()
             .AddSingleton<HumanFactory>()
             .AddSingleton<ObstacleFactory>()
             .AddHostedService<WorldHost>();

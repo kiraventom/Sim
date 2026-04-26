@@ -11,7 +11,7 @@ internal static class MapExtensions
         {
             var pos = RND.Point(1, 1);
             var rect = new Rect(pos, size);
-            var grid = map.GetOverlappingGrid(rect);
+            var grid = map.GetAreaGrid(rect);
             if (map.CanPlace(grid, rect))
                 return rect;
         }

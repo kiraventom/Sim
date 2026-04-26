@@ -10,6 +10,7 @@ public readonly struct Size(double width, double height)
     public double Height { get; } = height;
 
     public static Size operator *(Size a, Size b) => new Size(a.Width * b.Width, a.Height * b.Height);
+    public static Size operator *(Size a, double d) => new Size(a.Width * d, a.Height * d);
     public static bool operator ==(Size a, Size b) => a.Width == b.Width && a.Height == b.Height;
     public static bool operator !=(Size a, Size b) => a.Width != b.Width || a.Height != b.Height;
 

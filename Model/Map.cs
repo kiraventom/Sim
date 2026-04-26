@@ -11,7 +11,7 @@ internal class Map
 
     private readonly Dictionary<int, Rect> _rects = [];
 
-    private readonly List<int>[,] _areas = new List<int>[AREAS_COUNT, AREAS_COUNT];
+    private readonly Area[,] _areas = new Area[AREAS_COUNT, AREAS_COUNT];
 
     private ILogger<Map> Logger { get; }
 
@@ -23,7 +23,7 @@ internal class Map
 
         for (int i = 0; i < AREAS_COUNT; ++i)
             for (int j = 0; j < AREAS_COUNT; ++j)
-                _areas[i, j] = new List<int>();
+                _areas[i, j] = new Area();
     }
 
     public IReadOnlyDictionary<int, Rect> Rects => _rects;
@@ -32,18 +32,18 @@ internal class Map
     {
         if (_rects.TryGetValue(id, out var existingRect))
         {
-            Logger.LogDebug("Can't place {Id} to {Pos}, {Id} is already places at {ExistingPos}", id, rect.Pos, id, existingRect.Pos);
+            Logger.LogDebug("Can't place {Id} to {Pos}, {Id} is already places at {ExistingPos}", id, rect.Center, id, existingRect.Center);
             return false;
         }
 
         if (!Rect.EnsureValid(ref rect))
-            Logger.LogWarning("{Rect} was adjusted to be valid", rect);
+            Logger.LogInformation("{Rect} was adjusted to be valid", rect);
 
-        var grid = GetOverlappingGrid(rect);
+        var grid = GetAreaGrid(rect);
 
         if (!CanPlace(grid, rect))
         {
-            Logger.LogDebug("Can't place {Id} to {Pos}, place is taken", id, rect.Pos);
+            Logger.LogDebug("Can't place {Id} to {Pos}, place is taken", id, rect.Center);
             return false;
         }
 
@@ -70,18 +70,18 @@ internal class Map
         var newRect = oldRect.Offset(offset);
 
         if (!Rect.EnsureValid(ref newRect))
-            Logger.LogWarning("{NewRect} was adjusted to be valid", newRect);
+            Logger.LogInformation("{NewRect} was adjusted to be valid", newRect);
 
-        var oldGrid = GetOverlappingGrid(oldRect);
-        var newGrid = GetOverlappingGrid(newRect);
+        var oldGrid = GetAreaGrid(oldRect);
+        var newGrid = GetAreaGrid(newRect);
 
         if (!CanPlace(newGrid, newRect, id))
         {
-            Logger.LogDebug("Can't move {Id} to {Pos}, place is taken", id, newRect.Pos);
+            Logger.LogDebug("Can't move {Id} to {Pos}, place is taken", id, newRect.Center);
             return false;
         }
 
-        Logger.LogTrace("Changed {Id} pos from {Old} to {New}, {Offset}", id, oldRect.Pos, newRect.Pos, offset);
+        Logger.LogTrace("Changed {Id} pos from {Old} to {New}, {Offset}", id, oldRect.Center, newRect.Center, offset);
 
         // TODO: move those to RectI
         for (int r = oldGrid.Top; r <= oldGrid.Bottom; ++r)
@@ -110,7 +110,7 @@ internal class Map
         return true;
     }
 
-    internal RectI GetOverlappingGrid(Rect rect)
+    internal RectI GetAreaGrid(Rect rect)
     {
         int startRow = Math.Clamp((int)Math.Floor(rect.Top * AREAS_COUNT), 0, AREAS_COUNT - 1);
         int endRow = Math.Clamp((int)Math.Floor(rect.Bottom * AREAS_COUNT), 0, AREAS_COUNT - 1);
@@ -120,20 +120,28 @@ internal class Map
         return new RectI(new PointI(startCol, startRow), new SizeI(endCol - startCol, endRow - startRow));
     }
 
-    internal bool CanPlace(RectI grid, Rect rect, int? id = null)
+    internal IEnumerable<Area> GetAreasByGrid(RectI grid)
     {
         for (int r = grid.Top; r <= grid.Bottom; ++r)
         {
             for (int c = grid.Left; c <= grid.Right; ++c)
             {
-                foreach (var existingId in _areas[r, c])
-                {
-                    if (id.HasValue && id.Value == existingId)
-                        continue;
+                yield return _areas[r, c];
+            }
+        }
+    }
 
-                    if (_rects[existingId].Intersects(rect))
-                        return false;
-                }
+    internal bool CanPlace(RectI grid, Rect rect, int? id = null)
+    {
+        foreach (var area in GetAreasByGrid(grid))
+        {
+            foreach (var existingId in area.ObjectIds)
+            {
+                if (id.HasValue && id.Value == existingId)
+                    continue;
+
+                if (_rects[existingId].Intersects(rect))
+                    return false;
             }
         }
 
