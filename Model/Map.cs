@@ -32,7 +32,7 @@ internal class Map
     {
         if (_rects.TryGetValue(id, out var existingRect))
         {
-            Logger.LogDebug("Can't place {Id} to {Pos}, {Id} is already places at {ExistingPos}", id, rect.Center, id, existingRect.Center);
+            Logger.LogDebug("Can't place {Id} to {Pos}, {Id} is already places at {ExistingPos}", id, rect.Pos, id, existingRect.Pos);
             return false;
         }
 
@@ -43,7 +43,7 @@ internal class Map
 
         if (!CanPlace(grid, rect))
         {
-            Logger.LogDebug("Can't place {Id} to {Pos}, place is taken", id, rect.Center);
+            Logger.LogDebug("Can't place {Id} to {Pos}, place is taken", id, rect.Pos);
             return false;
         }
 
@@ -77,11 +77,11 @@ internal class Map
 
         if (!CanPlace(newGrid, newRect, id))
         {
-            Logger.LogDebug("Can't move {Id} to {Pos}, place is taken", id, newRect.Center);
+            Logger.LogDebug("Can't move {Id} to {Pos}, place is taken", id, newRect.Pos);
             return false;
         }
 
-        Logger.LogTrace("Changed {Id} pos from {Old} to {New}, {Offset}", id, oldRect.Center, newRect.Center, offset);
+        Logger.LogTrace("Changed {Id} pos from {Old} to {New}, {Offset}", id, oldRect.Pos, newRect.Pos, offset);
 
         // TODO: move those to RectI
         for (int r = oldGrid.Top; r <= oldGrid.Bottom; ++r)

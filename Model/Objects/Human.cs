@@ -22,6 +22,6 @@ internal class Human : Movable
     protected override Point GetNewTarget(Point pos)
     {
         // TEMP
-        return Map.RandomFreeRect(Size).Center;
+        return Map.RandomFreeRect(Size).Pos;
     }
 }

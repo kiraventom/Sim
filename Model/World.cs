@@ -19,7 +19,7 @@ internal class World(ILogger<World> logger, Map map)
         {
             if (obj is Movable movable)
             {
-                var pos = map[movable.Id].Center;
+                var pos = map[movable.Id].Pos;
                 var moveOffset = movable.GetMoveOffset(pos);
                 if (!map.TryMove(movable.Id, moveOffset))
                     logger.LogWarning("Failed to move {Id}, skipping", obj.Id);

@@ -11,6 +11,7 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
 {
     private const int LOOK_AROUND_FACTOR = 1;
     private const double PUSH_DISTANCE_FACTOR = 10;
+    private const double STRAIGHT_LINE_THRESHOLD = 0.001;
 
     public double GetMaxPushDistance(Movable movable)
     {
@@ -43,7 +44,7 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
                     continue;
 
                 ids.Add(objId);
-                logger.LogInformation("found obj: {Id}", objId);
+                logger.LogDebug("found obj: {Id}", objId);
             }
         }
 
@@ -75,16 +76,20 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
             var diffY = pureY - distY;
 
             Point newTarget;
-            if (distX == 0 && Math.Sign(distY) == Math.Sign(pureY))
+            if (distX == 0 && (pureY == 0 || Math.Sign(distY) == Math.Sign(pureY)))
             {
-                var newX = target.X + Math.Abs(diffY) * Math.Sign(pureX);
+                var sign = Math.Sign(target.X - r.Center.X);
+
+                var newX = target.X + Math.Abs(diffY) * sign;
                 var newY = target.Y - diffY;
                 newTarget = new Point(newX, newY);
             }
-            else if (distY == 0 && Math.Sign(distX) == Math.Sign(pureX))
+            else if (distY == 0 && (pureX == 0 || Math.Sign(distX) == Math.Sign(pureX)))
             {
+                var sign = Math.Sign(target.Y - r.Center.Y);
+
                 var newX = target.X - diffX;
-                var newY = target.Y + Math.Abs(diffX) * Math.Sign(pureY);
+                var newY = target.Y + Math.Abs(diffX) * sign;
                 newTarget = new Point(newX, newY);
             }
             else
@@ -92,8 +97,8 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
                 newTarget = target;
             }
 
-            logger.LogInformation("target: {oldT}, pure: {PX} {PY}, dist: {DX} {DY}, diff: {dX} {dY}, new target: {T}", target, pureX, pureY, distX, distY, diffX, diffY, newTarget);
-            newTargets.Add(dist, newTarget);
+            logger.LogDebug("target: {oldT}, pure: {PX} {PY}, dist: {DX} {DY}, diff: {dX} {dY}, new target: {T}", target, pureX, pureY, distX, distY, diffX, diffY, newTarget);
+            newTargets[dist] = newTarget;
         }
 
         if (newTargets.Any())
