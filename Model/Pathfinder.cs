@@ -39,7 +39,7 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
         var objectRects = GetNearbyObjectRects(movableRect);
         var evadeDist = GetEvadeDistance(movableRect.Size);
         var relTarget = absTarget - movableRect.Pos;
-        (double minDist, Point newTarget) = (0, absTarget);
+        (double minDist, Point newTarget) = (double.MaxValue, absTarget);
 
         foreach (var objectRect in objectRects)
         {
