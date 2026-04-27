@@ -6,19 +6,25 @@ internal abstract class Movable(Pathfinder pathfinder, int id) : SimObject(id)
 {
     public double Speed { get; protected init; }
 
-    public Movement Movement { get; private set; }
+    public Movement Movement { get; } = new();
 
     public Point GetMoveOffset(Point pos)
     {
         if (HasReachedTarget(pos))
         {
-            var target = GetNewTarget(pos);
-            Movement = new Movement(pos, target);
+            if (Movement.Points.Count != 0)
+                Movement.Points.RemoveFirst();
+
+            if (Movement.Points.Count == 0)
+            {
+                var target = GetNewTarget(pos);
+                Movement.Populate(pos, target);
+            }
         }
 
-        var targetPos = Movement.GetTarget();
+        pathfinder.AdjustMovement(this);
 
-        targetPos = pathfinder.GetAdjustedTarget(this, targetPos);
+        var targetPos = Movement.GetTarget();
 
         var traj = targetPos - pos;
         var direction = traj.Normalize();
@@ -33,6 +39,6 @@ internal abstract class Movable(Pathfinder pathfinder, int id) : SimObject(id)
 
     protected abstract Point GetNewTarget(Point pos);
 
-    protected bool HasReachedTarget(Point currentPos) => Movement is null || currentPos == Movement.End;
+    protected bool HasReachedTarget(Point currentPos) => Movement.Points.Count == 0 || new Rect(currentPos, new Size(0.0001, 0.0001)).Intersects(new Rect(Movement.GetTarget(), new Size(0.0001, 0.0001)));
 }
 

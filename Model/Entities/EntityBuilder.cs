@@ -25,11 +25,17 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
             {
                 case Human h when h.Movement is Movement m:
                     snapshot.Add(new HumanEntity(h.Id, absRect));
-                    snapshot.Add(new LineEntity(id, absRect.Center, m.GetTarget().ToEntityPoint(settings), isMainPath: true));
 
-                    var adjustedTarget = DBG_Pathfinder.GetAdjustedTarget(h, m.GetTarget());
-                    if (adjustedTarget != m.GetTarget())
-                        snapshot.Add(new LineEntity(id, absRect.Center, adjustedTarget.ToEntityPoint(settings), isAltPath: true));
+                    var prevPoint = absRect.Center;
+                    foreach (var point in m.Points)
+                    {
+                        var absPoint = point.ToEntityPoint(settings);
+                        if (point == m.End)
+                            snapshot.Add(new LineEntity(id, prevPoint, absPoint, isMainPath: true));
+                        else
+                            snapshot.Add(new LineEntity(id, prevPoint, absPoint, isAltPath: true));
+                        prevPoint = absPoint;
+                    }
                     break;
 
                 case Human h:

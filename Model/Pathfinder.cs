@@ -8,6 +8,9 @@ namespace Sim.Model;
 
 internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
 {
+    private record AltTarget(double Distance, IReadOnlyCollection<Point> Points);
+    private enum EvasionResult { NoChange, AltTarget, Fail }
+
     private const int LOOK_AROUND_FACTOR = 1;
     private const double EVADE_DISTANCE_FACTOR = 5;
 
@@ -25,20 +28,36 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
         return grid;
     }
 
-    public Point GetAdjustedTarget(Movable movable, Point target)
+    public void AdjustMovement(Movable movable)
     {
-        EvadeObjects(movable, ref target);
-        return target;
+        if (movable.Movement.Points.Count > 1)
+            return;
+
+        var target = movable.Movement.GetTarget();
+        var result = EvadeObjects(movable, target, out var altTarget);
+        if (result == EvasionResult.AltTarget)
+        {
+            movable.Movement.Points.AddFirst(altTarget);
+        }
+        else if (result == EvasionResult.Fail)
+        {
+            // TODO: Find a way out
+            // TEMP
+            movable.Movement.Populate(map[movable.Id].Pos, map.RandomFreeRect(movable.Size).Pos);
+        }
     }
 
-    private void EvadeObjects(Movable movable, ref Point absTarget)
+    private EvasionResult EvadeObjects(Movable movable, Point absTarget, out Point altTarget)
     {
+        altTarget = absTarget;
+
         var movableRect = map[movable.Id];
         var objectRects = GetNearbyObjectRects(movableRect);
         var evadeDist = GetEvadeDistance(movableRect.Size);
         var relTarget = absTarget - movableRect.Pos;
-        (double minDist, Point newTarget) = (double.MaxValue, absTarget);
+        List<AltTarget> altTargets = [];
 
+        // TODO: Move to selecting closest object and evading only it
         foreach (var objectRect in objectRects)
         {
             var (a, b) = Rect.GetDirectVector(movableRect, objectRect);
@@ -48,54 +67,111 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
             if (dist >= evadeDist)
                 continue;
 
-            if (dist >= minDist)
-                continue;
-
-            minDist = dist;
-
             var distX = distVec.X;
             var distY = distVec.Y;
 
             var isVerticalToObject = Math.Abs(distX) < Math.Abs(distY);
 
-            newTarget = isVerticalToObject
-                ? HandleVerticalFromObject(objectRect, (double)relTarget.Y, distY, evadeDist, absTarget)
-                : HandleHorizontalFromObject(objectRect, (double)relTarget.X, distX, evadeDist, absTarget);
+            var points = isVerticalToObject
+                ? GetHorizontalPoints(movableRect, objectRect, (double)relTarget.Y, distY, evadeDist, absTarget)
+                : GetVerticalPoints(movableRect, objectRect, (double)relTarget.X, distX, evadeDist, absTarget);
+
+            if (points.Count > 0)
+                altTargets.Add(new AltTarget(dist, points));
         }
 
-        absTarget = newTarget;
+        if (altTargets.Count == 0)
+        {
+            logger.LogDebug("No objects in evade distance near {Pos}", movableRect.Pos);
+            return EvasionResult.NoChange;
+        }
+
+        altTargets.Sort((a, b) => a.Distance.CompareTo(b.Distance));
+        foreach (var (_, points) in altTargets)
+        {
+            foreach (var point in points)
+            {
+                var rect = new Rect(point, movable.Size);
+                if (rect.Left < 0 || rect.Right > 1.0 || rect.Top < 0 || rect.Bottom > 1.0)
+                    continue;
+
+                var grid = map.GetAreaGrid(rect);
+                if (map.CanPlace(grid, rect, movable.Id))
+                {
+                    altTarget = point;
+                    return EvasionResult.AltTarget;
+                }
+            }
+        }
+
+        logger.LogError("Failed to calculate alt target");
+        return EvasionResult.Fail;
     }
 
-    private Point HandleHorizontalFromObject(Rect objectRect, double relTargetX, double distX, double evadeDist, Point target)
+    private IReadOnlyCollection<Point> GetVerticalPoints(Rect movableRect, Rect objectRect, double relTargetX, double distX, double evadeDist, Point target)
     {
         var hasHorizontalMovement = relTargetX != 0;
         if (!hasHorizontalMovement)
-            return target;
+            return [];
 
         var objectBlocksTarget = Math.Sign(distX) == Math.Sign(relTargetX) && Math.Abs(relTargetX) > Math.Abs(distX);
         if (!objectBlocksTarget)
-            return target;
+            return [];
 
         var moveNorth = target.Y < objectRect.Center.Y;
-        var newX = target.X - relTargetX;
-        var newY = moveNorth ? objectRect.Top - evadeDist : objectRect.Bottom + evadeDist;
-        return new Point(newX, newY);
+        var x = movableRect.Pos.X;
+        var northY = objectRect.Top - evadeDist;
+        var southY = objectRect.Bottom + evadeDist;
+
+        var north = new Point(x, northY);
+        var south = new Point(x, southY);
+
+        // If alt point is backwards
+        if (movableRect.Pos.Y < objectRect.Top && movableRect.Pos.Y > northY)
+        {
+            if (movableRect.Pos.Y > objectRect.Bottom && movableRect.Pos.Y < southY)
+                return [];
+
+            return [south];
+        }
+
+        if (moveNorth)
+            return [north, south];
+
+        return [south, north];
     }
 
-    private Point HandleVerticalFromObject(Rect objectRect, double relTargetY, double distY, double evadeDist, Point target)
+    private IReadOnlyCollection<Point> GetHorizontalPoints(Rect movableRect, Rect objectRect, double relTargetY, double distY, double evadeDist, Point target)
     {
         var hasVerticalMovement = relTargetY != 0;
         if (!hasVerticalMovement)
-            return target;
+            return [];
 
         var objectBlocksTarget = Math.Sign(distY) == Math.Sign(relTargetY) && Math.Abs(relTargetY) > Math.Abs(distY);
         if (!objectBlocksTarget)
-            return target;
+            return [];
 
         var moveWest = target.X < objectRect.Center.X;
-        var newX = moveWest ? objectRect.Left - evadeDist : objectRect.Right + evadeDist;
-        var newY = target.Y - relTargetY;
-        return new Point(newX, newY);
+        var westX = objectRect.Left - evadeDist;
+        var eastX = objectRect.Right + evadeDist;
+        var y = movableRect.Pos.Y;
+
+        var west = new Point(westX, y);
+        var east = new Point(eastX, y);
+
+        // If alt point is backwards
+        if (movableRect.Pos.X < objectRect.Left && movableRect.Pos.X > westX)
+        {
+            if (movableRect.Pos.X > objectRect.Right && movableRect.Pos.X < eastX)
+                return [];
+
+            return [east];
+        }
+
+        if (moveWest)
+            return [west, east];
+
+        return [east, west];    
     }
 
     private IEnumerable<Rect> GetNearbyObjectRects(Rect movableRect)

@@ -36,8 +36,8 @@ internal class Map
             return false;
         }
 
-        if (!Rect.EnsureValid(ref rect))
-            Logger.LogInformation("{Rect} was adjusted to be valid", rect);
+        if (Rect.ClampToMap(ref rect))
+            Logger.LogInformation("{Rect} was clamped to map", rect);
 
         var grid = GetAreaGrid(rect);
 
@@ -69,8 +69,8 @@ internal class Map
 
         var newRect = oldRect.Offset(offset);
 
-        if (!Rect.EnsureValid(ref newRect))
-            Logger.LogInformation("{NewRect} was adjusted to be valid", newRect);
+        if (Rect.ClampToMap(ref newRect))
+            Logger.LogInformation("{NewRect} was clamped to map", newRect);
 
         var oldGrid = GetAreaGrid(oldRect);
         var newGrid = GetAreaGrid(newRect);

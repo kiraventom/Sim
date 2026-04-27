@@ -39,7 +39,7 @@ public readonly struct Rect(Point pos, Size size)
 
     public Rect Offset(Point offset) => new Rect(Pos + offset, Size);
 
-    public static bool EnsureValid(ref Rect rect)
+    public static bool ClampToMap(ref Rect rect)
     {
         var oldRect = rect;
 
@@ -59,7 +59,7 @@ public readonly struct Rect(Point pos, Size size)
             y = 1.0 - height;
 
         rect = new Rect(new Point(x + width / 2, y + width / 2), new Size(width, height));
-        return oldRect == rect;
+        return oldRect != rect;
     }
 
     public RectI ToRectI() => new RectI(TopLeft.ToPointI(), Size.ToSizeI());
