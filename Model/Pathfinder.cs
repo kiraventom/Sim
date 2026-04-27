@@ -13,9 +13,9 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
     private const double PUSH_DISTANCE_FACTOR = 10;
     private const double STRAIGHT_LINE_THRESHOLD = 0.001;
 
-    public double GetMaxPushDistance(Movable movable)
+    public static double GetMaxPushDistance(Size size)
     {
-        var maxDist = Math.Max(movable.Size.Width * PUSH_DISTANCE_FACTOR, movable.Size.Height * PUSH_DISTANCE_FACTOR);
+        var maxDist = Math.Max(size.Width * PUSH_DISTANCE_FACTOR, size.Height * PUSH_DISTANCE_FACTOR);
         return maxDist;
     }
 
@@ -29,40 +29,24 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
 
     public Point GetAdjustedTarget(Movable movable, Point target)
     {
-        var rect = map[movable.Id];
-        var grid = GetLookAroundGrid(rect);
+        EvadeObjects(movable, ref target);
+        return target;
+    }
 
-        var areas = map.GetAreasByGrid(grid);
-
-        HashSet<int> ids = [];
-
-        foreach (var area in areas)
-        {
-            foreach (var objId in area.ObjectIds)
-            {
-                if (objId == movable.Id)
-                    continue;
-
-                ids.Add(objId);
-                logger.LogDebug("found obj: {Id}", objId);
-            }
-        }
-
-        if (ids.Count == 0)
-            return target;
-
-        var maxDist = GetMaxPushDistance(movable);
-        var pureTarget = target - rect.Pos;
-
+    private void EvadeObjects(Movable movable, ref Point target)
+    {
+        var movableRect = map[movable.Id];
+        var objectRects = GetNearbyObjectRects(movableRect);
+        var maxDist = GetMaxPushDistance(movableRect.Size);
+        var pureTarget = target - movableRect.Pos;
         var newTargets = new Dictionary<double, Point>();
 
-        foreach (var id in ids)
+        foreach (var objectRect in objectRects)
         {
-            var r = map[id];
-            var (a, b) = Rect.GetDirectVector(rect, r);
+            var (a, b) = Rect.GetDirectVector(movableRect, objectRect);
             var distVec = (b - a);
             var dist = distVec.Length;
-            
+
             if (dist > maxDist)
                 continue;
 
@@ -78,7 +62,7 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
             Point newTarget;
             if (distX == 0 && (pureY == 0 || Math.Sign(distY) == Math.Sign(pureY)))
             {
-                var sign = Math.Sign(target.X - r.Center.X);
+                var sign = Math.Sign(target.X - objectRect.Center.X);
 
                 var newX = target.X + Math.Abs(diffY) * sign;
                 var newY = target.Y - diffY;
@@ -86,7 +70,7 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
             }
             else if (distY == 0 && (pureX == 0 || Math.Sign(distX) == Math.Sign(pureX)))
             {
-                var sign = Math.Sign(target.Y - r.Center.Y);
+                var sign = Math.Sign(target.Y - objectRect.Center.Y);
 
                 var newX = target.X - diffX;
                 var newY = target.Y + Math.Abs(diffX) * sign;
@@ -103,7 +87,27 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
 
         if (newTargets.Any())
             target = newTargets.MinBy(x => x.Key).Value;
+    }
 
-        return target;
+    private IEnumerable<Rect> GetNearbyObjectRects(Rect movableRect)
+    {
+        var grid = GetLookAroundGrid(movableRect);
+        var areas = map.GetAreasByGrid(grid);
+
+        HashSet<Rect> rects = [];
+
+        foreach (var area in areas)
+        {
+            foreach (var objId in area.ObjectIds)
+            {
+                var rect = map[objId];
+                if (rect == movableRect)
+                    continue;
+
+                rects.Add(rect);
+            }
+        }
+
+        return rects;
     }
 }

@@ -35,7 +35,7 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
                             snapshot.Add(new LineEntity(id, absRect.Pos, adjustedTarget.ToAbsPoint(settings), isAltPath: true));
                         }
 
-                        var maxDist = DBG_Pathfinder.GetMaxPushDistance(h);
+                        var maxDist = Pathfinder.GetMaxPushDistance(h.Size);
                         var grid = DBG_Pathfinder.GetLookAroundGrid(rect);
                         var areas = map.GetAreasByGrid(grid);
                         foreach (var area in areas)
