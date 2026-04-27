@@ -33,13 +33,13 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
         return target;
     }
 
-    private void EvadeObjects(Movable movable, ref Point target)
+    private void EvadeObjects(Movable movable, ref Point absTarget)
     {
         var movableRect = map[movable.Id];
         var objectRects = GetNearbyObjectRects(movableRect);
         var evadeDist = GetEvadeDistance(movableRect.Size);
-        var pureTarget = target - movableRect.Pos;
-        var newTargets = new Dictionary<double, Point>();
+        var relTarget = absTarget - movableRect.Pos;
+        (double minDist, Point newTarget) = (0, absTarget);
 
         foreach (var objectRect in objectRects)
         {
@@ -47,67 +47,57 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
             var distVec = (b - a);
             var dist = distVec.Length;
 
-            if (dist > evadeDist)
+            if (dist >= evadeDist)
                 continue;
 
-            var pureX = pureTarget.X;
-            var pureY = pureTarget.Y;
+            if (dist >= minDist)
+                continue;
+
+            minDist = dist;
 
             var distX = distVec.X;
             var distY = distVec.Y;
 
-            Point newTarget = target;
-
             var isVerticalToObject = Math.Abs(distX) < Math.Abs(distY);
 
-            if (isVerticalToObject)
-            {
-                HandleVerticalFromObject(objectRect, pureY, distY, evadeDist, ref newTarget);
-            }
-            else
-            {
-                HandleHorizontalFromObject(objectRect, pureX, distX, evadeDist, ref newTarget);
-            }
-
-            newTargets[dist] = newTarget;
+            newTarget = isVerticalToObject
+                ? HandleVerticalFromObject(objectRect, (double)relTarget.Y, distY, evadeDist, absTarget)
+                : HandleHorizontalFromObject(objectRect, (double)relTarget.X, distX, evadeDist, absTarget);
         }
 
-        if (newTargets.Any())
-            target = newTargets.MinBy(x => x.Key).Value;
+        absTarget = newTarget;
     }
 
-    private bool HandleHorizontalFromObject(Rect objectRect, double pureX, double distX, double evadeDist, ref Point target)
+    private Point HandleHorizontalFromObject(Rect objectRect, double relTargetX, double distX, double evadeDist, Point target)
     {
-        var hasHorizontalMovement = pureX != 0;
+        var hasHorizontalMovement = relTargetX != 0;
         if (!hasHorizontalMovement)
-            return false;
+            return target;
 
-        var objectBlocksTarget = Math.Sign(distX) == Math.Sign(pureX) && Math.Abs(pureX) > Math.Abs(distX);
+        var objectBlocksTarget = Math.Sign(distX) == Math.Sign(relTargetX) && Math.Abs(relTargetX) > Math.Abs(distX);
         if (!objectBlocksTarget)
-            return false;
+            return target;
 
         var moveNorth = target.Y < objectRect.Center.Y;
-        var newX = target.X - pureX;
+        var newX = target.X - relTargetX;
         var newY = moveNorth ? objectRect.Top - evadeDist : objectRect.Bottom + evadeDist;
-        target = new Point(newX, newY);
-        return true;
+        return new Point(newX, newY);
     }
 
-    private bool HandleVerticalFromObject(Rect objectRect, double pureY, double distY, double evadeDist, ref Point target)
+    private Point HandleVerticalFromObject(Rect objectRect, double relTargetY, double distY, double evadeDist, Point target)
     {
-        var hasVerticalMovement = pureY != 0;
+        var hasVerticalMovement = relTargetY != 0;
         if (!hasVerticalMovement)
-            return false;
+            return target;
 
-        var objectBlocksTarget = Math.Sign(distY) == Math.Sign(pureY) && Math.Abs(pureY) > Math.Abs(distY);
+        var objectBlocksTarget = Math.Sign(distY) == Math.Sign(relTargetY) && Math.Abs(relTargetY) > Math.Abs(distY);
         if (!objectBlocksTarget)
-            return false;
+            return target;
 
         var moveWest = target.X < objectRect.Center.X;
         var newX = moveWest ? objectRect.Left - evadeDist : objectRect.Right + evadeDist;
-        var newY = target.Y - pureY;
-        target = new Point(newX, newY);
-        return true;
+        var newY = target.Y - relTargetY;
+        return new Point(newX, newY);
     }
 
     private IEnumerable<Rect> GetNearbyObjectRects(Rect movableRect)
