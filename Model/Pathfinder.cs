@@ -10,12 +10,12 @@ namespace Sim.Model;
 internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
 {
     private const int LOOK_AROUND_FACTOR = 1;
-    private const double PUSH_DISTANCE_FACTOR = 10;
+    private const double EVADE_DISTANCE_FACTOR = 10;
     private const double STRAIGHT_LINE_THRESHOLD = 0.001;
 
-    public static double GetMaxPushDistance(Size size)
+    public static double GetEvadeDistance(Size size)
     {
-        var maxDist = Math.Max(size.Width * PUSH_DISTANCE_FACTOR, size.Height * PUSH_DISTANCE_FACTOR);
+        var maxDist = Math.Max(size.Width * EVADE_DISTANCE_FACTOR, size.Height * EVADE_DISTANCE_FACTOR);
         return maxDist;
     }
 
@@ -37,7 +37,7 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
     {
         var movableRect = map[movable.Id];
         var objectRects = GetNearbyObjectRects(movableRect);
-        var maxDist = GetMaxPushDistance(movableRect.Size);
+        var evadeDist = GetEvadeDistance(movableRect.Size);
         var pureTarget = target - movableRect.Pos;
         var newTargets = new Dictionary<double, Point>();
 
@@ -47,7 +47,7 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
             var distVec = (b - a);
             var dist = distVec.Length;
 
-            if (dist > maxDist)
+            if (dist > evadeDist)
                 continue;
 
             var pureX = pureTarget.X;
@@ -56,37 +56,58 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
             var distX = distVec.X;
             var distY = distVec.Y;
 
-            var diffX = pureX - distX;
-            var diffY = pureY - distY;
+            Point newTarget = target;
 
-            Point newTarget;
-            if (distX == 0 && (pureY == 0 || Math.Sign(distY) == Math.Sign(pureY)))
+            var isVerticalToObject = Math.Abs(distX) < Math.Abs(distY);
+
+            if (isVerticalToObject)
             {
-                var sign = Math.Sign(target.X - objectRect.Center.X);
-
-                var newX = target.X + Math.Abs(diffY) * sign;
-                var newY = target.Y - diffY;
-                newTarget = new Point(newX, newY);
-            }
-            else if (distY == 0 && (pureX == 0 || Math.Sign(distX) == Math.Sign(pureX)))
-            {
-                var sign = Math.Sign(target.Y - objectRect.Center.Y);
-
-                var newX = target.X - diffX;
-                var newY = target.Y + Math.Abs(diffX) * sign;
-                newTarget = new Point(newX, newY);
+                HandleVerticalFromObject(objectRect, pureY, distY, evadeDist, ref newTarget);
             }
             else
             {
-                newTarget = target;
+                HandleHorizontalFromObject(objectRect, pureX, distX, evadeDist, ref newTarget);
             }
 
-            logger.LogDebug("target: {oldT}, pure: {PX} {PY}, dist: {DX} {DY}, diff: {dX} {dY}, new target: {T}", target, pureX, pureY, distX, distY, diffX, diffY, newTarget);
             newTargets[dist] = newTarget;
         }
 
         if (newTargets.Any())
             target = newTargets.MinBy(x => x.Key).Value;
+    }
+
+    private bool HandleHorizontalFromObject(Rect objectRect, double pureX, double distX, double evadeDist, ref Point target)
+    {
+        var hasHorizontalMovement = pureX != 0;
+        if (!hasHorizontalMovement)
+            return false;
+
+        var objectBlocksTarget = Math.Sign(distX) == Math.Sign(pureX) && Math.Abs(pureX) > Math.Abs(distX);
+        if (!objectBlocksTarget)
+            return false;
+
+        var moveNorth = target.Y < objectRect.Center.Y;
+        var newX = target.X - pureX;
+        var newY = moveNorth ? objectRect.Top - evadeDist : objectRect.Bottom + evadeDist;
+        target = new Point(newX, newY);
+        return true;
+    }
+
+    private bool HandleVerticalFromObject(Rect objectRect, double pureY, double distY, double evadeDist, ref Point target)
+    {
+        var hasVerticalMovement = pureY != 0;
+        if (!hasVerticalMovement)
+            return false;
+
+        var objectBlocksTarget = Math.Sign(distY) == Math.Sign(pureY) && Math.Abs(pureY) > Math.Abs(distY);
+        if (!objectBlocksTarget)
+            return false;
+
+        var moveWest = target.X < objectRect.Center.X;
+        var newX = moveWest ? objectRect.Left - evadeDist : objectRect.Right + evadeDist;
+        var newY = target.Y - pureY;
+        target = new Point(newX, newY);
+        return true;
     }
 
     private IEnumerable<Rect> GetNearbyObjectRects(Rect movableRect)
