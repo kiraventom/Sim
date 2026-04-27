@@ -12,8 +12,7 @@ internal class Human : Movable
     public Human(Map map, Pathfinder pathfinder, int id) : base(pathfinder, id)
     {
         const double SpeedModMin = 0.0015;
-        const double SpeedModMax = 0.0015;
-        // const double SpeedModMax = 0.003;
+        const double SpeedModMax = 0.003;
         Speed = RND.Double(SpeedModMin, SpeedModMax);
 
         Map = map;

@@ -10,12 +10,12 @@ public readonly struct Rect(Point pos, Size size)
     public Point Pos { get; } = pos;
     public Size Size { get; } = size;
 
-    public double Left => Pos.X;
-    public double Right => Pos.X + Size.Width;
-    public double Top => Pos.Y;
-    public double Bottom => Pos.Y + Size.Height;
+    public double Left => Pos.X - Size.Width / 2;
+    public double Right => Pos.X + Size.Width / 2;
+    public double Top => Pos.Y - Size.Height / 2;
+    public double Bottom => Pos.Y + Size.Height / 2;
 
-    public Point Center => Pos + new Size(Width / 2, Height / 2);
+    public Point Center => Pos;
     public Point TopLeft => new Point(Left, Top);
     public Point TopRight => new Point(Right, Top);
     public Point BottomLeft => new Point(Left, Bottom);
@@ -58,11 +58,11 @@ public readonly struct Rect(Point pos, Size size)
         if (y + height > 1.0)
             y = 1.0 - height;
 
-        rect = new Rect(new Point(x, y), new Size(width, height));
+        rect = new Rect(new Point(x + width / 2, y + width / 2), new Size(width, height));
         return oldRect == rect;
     }
 
-    public RectI ToRectI() => new RectI(Pos.ToPointI(), Size.ToSizeI());
+    public RectI ToRectI() => new RectI(TopLeft.ToPointI(), Size.ToSizeI());
 
     public bool Intersects(Rect rect) => Left < rect.Right && Right > rect.Left && Top < rect.Bottom && Bottom > rect.Top;
 

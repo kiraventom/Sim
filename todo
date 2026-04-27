@@ -1,4 +1,3 @@
-- move to pos = center
-- fix sliding along obstacles
-- fix getting stuck together
 - fix getting stuck near edges
+- fix getting stuck together
+- fix sliding along obstacles

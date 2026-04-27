@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using Sim.Model.Objects;
@@ -10,8 +9,7 @@ namespace Sim.Model;
 internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
 {
     private const int LOOK_AROUND_FACTOR = 1;
-    private const double EVADE_DISTANCE_FACTOR = 10;
-    private const double STRAIGHT_LINE_THRESHOLD = 0.001;
+    private const double EVADE_DISTANCE_FACTOR = 5;
 
     public static double GetEvadeDistance(Size size)
     {
@@ -22,7 +20,7 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
     public RectI GetLookAroundGrid(Rect rect)
     {
         var areaSize = 1.0 / Map.AREAS_COUNT;
-        var inflatedRect = new Rect(rect.Pos - new Point(areaSize, areaSize) * LOOK_AROUND_FACTOR, new Size(areaSize, areaSize) * 2 * LOOK_AROUND_FACTOR);
+        var inflatedRect = new Rect(rect.Pos, new Size(areaSize, areaSize) * 2 * LOOK_AROUND_FACTOR);
         var grid = map.GetAreaGrid(inflatedRect);
         return grid;
     }

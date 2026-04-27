@@ -9,7 +9,8 @@ internal static class MapExtensions
     {
         for (int i = 0; i < 100; ++i)
         {
-            var pos = RND.Point(1, 1);
+            var pos = RND.Point(1.0 - size.Width, 1.0 - size.Height);
+            pos += new Point(size.Width / 2, size.Height / 2);
             var rect = new Rect(pos, size);
             var grid = map.GetAreaGrid(rect);
             if (map.CanPlace(grid, rect))

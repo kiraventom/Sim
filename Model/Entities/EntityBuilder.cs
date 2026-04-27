@@ -19,44 +19,17 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
                 continue;
             }
 
-            var absRect = rect.ToAbsRect(settings);
+            var absRect = rect.ToEntityRect(settings);
 
             switch (obj)
             {
                 case Human h when h.Movement is Movement m:
                     snapshot.Add(new HumanEntity(h.Id, absRect));
-                    snapshot.Add(new LineEntity(id, absRect.Pos, m.GetTarget().ToAbsPoint(settings), isMainPath: true));
+                    snapshot.Add(new LineEntity(id, absRect.Center, m.GetTarget().ToEntityPoint(settings), isMainPath: true));
 
-                    // DBG
-                    {
-                        var adjustedTarget = DBG_Pathfinder.GetAdjustedTarget(h, m.GetTarget());
-                        if (adjustedTarget != m.GetTarget())
-                        {
-                            snapshot.Add(new LineEntity(id, absRect.Pos, adjustedTarget.ToAbsPoint(settings), isAltPath: true));
-                        }
-
-                        var maxDist = Pathfinder.GetEvadeDistance(h.Size);
-                        var grid = DBG_Pathfinder.GetLookAroundGrid(rect);
-                        var areas = map.GetAreasByGrid(grid);
-                        foreach (var area in areas)
-                        {
-                            var ids = area.ObjectIds;
-                            foreach (var objId in ids)
-                            {
-                                if (objId == id)
-                                    continue;
-
-                                var objRect = map[objId];
-                                var (a, b) = Rect.GetDirectVector(rect, objRect);
-                                var distVec = (a - b);
-                                if (distVec.Length > maxDist)
-                                    continue;
-
-                                snapshot.Add(new LineEntity(id, a.ToAbsPoint(settings), b.ToAbsPoint(settings)));
-                            }
-                        }
-                    }
-                    
+                    var adjustedTarget = DBG_Pathfinder.GetAdjustedTarget(h, m.GetTarget());
+                    if (adjustedTarget != m.GetTarget())
+                        snapshot.Add(new LineEntity(id, absRect.Center, adjustedTarget.ToEntityPoint(settings), isAltPath: true));
                     break;
 
                 case Human h:
@@ -81,10 +54,10 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
         {
             for (int c = grid.Left; c <= grid.Right; ++c)
             {
-                var areaPos = new Point((double)c / Map.AREAS_COUNT, (double)r / Map.AREAS_COUNT);
                 var areaSize = new Size(1.0 / Map.AREAS_COUNT, 1.0 / Map.AREAS_COUNT);
+                var areaPos = new Point((double)c / Map.AREAS_COUNT + areaSize.Width / 2, (double)r / Map.AREAS_COUNT + areaSize.Height / 2);
                 var areaRect = new Rect(areaPos, areaSize);
-                var areaAbsRect = areaRect.ToAbsRect(settings);
+                var areaAbsRect = areaRect.ToEntityRect(settings);
                 var area = new AreaEntity(id, areaAbsRect);
                 snapshot.Add(area);
             }
