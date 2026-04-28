@@ -12,11 +12,18 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
     private enum EvasionResult { NoChange, AltTarget, Fail }
 
     private const int LOOK_AROUND_FACTOR = 1;
-    private const double EVADE_DISTANCE_FACTOR = 5;
+    private const double DETECTION_DISTANCE_FACTOR = 10;
+    private const double EVADE_DISTANCE_FACTOR = 2;
 
     public static double GetEvadeDistance(Size size)
     {
         var maxDist = Math.Max(size.Width * EVADE_DISTANCE_FACTOR, size.Height * EVADE_DISTANCE_FACTOR);
+        return maxDist;
+    }
+
+    public static double GetDetectionDistance(Size size)
+    {
+        var maxDist = Math.Max(size.Width * DETECTION_DISTANCE_FACTOR, size.Height * DETECTION_DISTANCE_FACTOR);
         return maxDist;
     }
 
@@ -54,6 +61,7 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
         var movableRect = map[movable.Id];
         var objectRects = GetNearbyObjectRects(movableRect);
         var evadeDist = GetEvadeDistance(movableRect.Size);
+        // var detectionDist = GetDetectionDistance(movableRect.Size);
         var relTarget = absTarget - movableRect.Pos;
         List<AltTarget> altTargets = [];
 
@@ -119,21 +127,12 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
             return [];
 
         var moveNorth = target.Y < objectRect.Center.Y;
-        var x = movableRect.Pos.X;
+        var x = Math.Sign(distX) < 0 ? objectRect.Right + evadeDist : objectRect.Left - evadeDist;
         var northY = objectRect.Top - evadeDist;
         var southY = objectRect.Bottom + evadeDist;
 
         var north = new Point(x, northY);
         var south = new Point(x, southY);
-
-        // If alt point is backwards
-        if (movableRect.Pos.Y < objectRect.Top && movableRect.Pos.Y > northY)
-        {
-            if (movableRect.Pos.Y > objectRect.Bottom && movableRect.Pos.Y < southY)
-                return [];
-
-            return [south];
-        }
 
         if (moveNorth)
             return [north, south];
@@ -154,19 +153,10 @@ internal class Pathfinder(ILogger<Pathfinder> logger, Map map)
         var moveWest = target.X < objectRect.Center.X;
         var westX = objectRect.Left - evadeDist;
         var eastX = objectRect.Right + evadeDist;
-        var y = movableRect.Pos.Y;
+        var y = Math.Sign(distY) < 0 ? objectRect.Bottom + evadeDist : objectRect.Top - evadeDist;
 
         var west = new Point(westX, y);
         var east = new Point(eastX, y);
-
-        // If alt point is backwards
-        if (movableRect.Pos.X < objectRect.Left && movableRect.Pos.X > westX)
-        {
-            if (movableRect.Pos.X > objectRect.Right && movableRect.Pos.X < eastX)
-                return [];
-
-            return [east];
-        }
 
         if (moveWest)
             return [west, east];
