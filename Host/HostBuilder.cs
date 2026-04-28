@@ -6,6 +6,7 @@ using System.IO;
 using static System.Environment;
 using Sim.Model;
 using Sim.Model.Entities;
+using Sim.Utils;
 
 namespace Sim.Host;
 
@@ -44,6 +45,8 @@ public class HostBuilder
                 width = w;
             else if (args[i] == "--height" && int.TryParse(args[i + 1], out int ht)) 
                 height = ht;
+            else if (args[i] == "--seed" && int.TryParse(args[i + 1], out int s))
+                RND.SetSeed(s);
         }
 
         _settings = new WorldSettings(humans, obstacles, width, height);
@@ -99,6 +102,7 @@ public class HostBuilder
         var host = _builder.Build();
 
         Log.Logger = host.Services.GetRequiredService<ILogger>();
+        Log.Logger.Information("Seed: {Seed}", RND.Seed);
         return host;
     }
 }
