@@ -1,4 +1,4 @@
-using Sim.Model;
+﻿using Sim.Model;
 using Sim.Model.Entities;
 using Sim.Model.Objects;
 
@@ -15,7 +15,7 @@ internal class ObjectInfoBuilder(Map map, WorldSettings settings)
 
         return obj switch
         {
-            Human h => new HumanInfo(h.Id, rect.TopLeft, h.Speed * settings.MapWidth, h.Movement.Start.ToEntityPoint(settings), h.Movement.End.ToEntityPoint(settings)).Text,
+            Human h => new HumanInfo(h.Id, rect, h.Speed * settings.MapWidth, h.Path.Start.ToEntityPoint(settings), h.Path.End.ToEntityPoint(settings)).Text,
             _ => new DefaultInfo(obj.Id).Text
         };
     }

@@ -91,7 +91,7 @@ public class HostBuilder
             .AddSingleton<Map>()
             .AddSingleton<World>()
             .AddSingleton<ObjectInfoBuilder>()
-            .AddSingleton<Pathfinder>()
+            .AddSingleton<PathBuilder>()
             .AddSingleton<EntityBuilder>()
             .AddSingleton<EntityCache>()
             .AddSingleton<IdContainer>()

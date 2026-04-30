@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using Sim.Model.Objects;
 
 namespace Sim.Model.Entities;
 
-internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map, Pathfinder DBG_Pathfinder)
+internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map, PathBuilder DBG_Pathfinder)
 {
     public EntitySnapshot UpdateSnapshot(EntitySnapshot snapshot)
     {
@@ -23,7 +23,7 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
 
             switch (obj)
             {
-                case Human h when h.Movement is Movement m:
+                case Human h when h.Path is Path m:
                     snapshot.Add(new HumanEntity(h.Id, absRect));
 
                     var prevPoint = absRect.Center;
