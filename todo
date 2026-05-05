@@ -1,3 +1,6 @@
-- fix getting stuck near edges
-- fix getting stuck together
-- fix sliding along obstacles
+- fix raycast not accounting for movable size
+- evade dynamic obstacles (pass the one with higher ID)
+- replace SplitIntoCorners into GetCorner (guess the corner from hit.Enter only)
+- fix raycast not stopping after first hit
+- make pathbuilder transient
+- optimize
