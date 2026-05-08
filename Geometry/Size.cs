@@ -25,7 +25,6 @@ public readonly struct Size(double width, double height)
     public override string ToString() => $"{Width}x{Height}";
 
     public override bool Equals(object obj) => obj is Size s && this == s;
-
     public override int GetHashCode() => HashCode.Combine(Width, Height);
 }
 

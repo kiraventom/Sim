@@ -82,7 +82,6 @@ public readonly struct Rect
     public override string ToString() => $"[{Pos.X}:{Pos.Y} {Size.Width}x{Size.Height}]";
 
     public override bool Equals(object obj) => obj is Rect r && r == this;
-
     public override int GetHashCode() => HashCode.Combine(Pos, Size);
 
     internal static (Point, Point) GetDirectVector(Rect a, Rect b)

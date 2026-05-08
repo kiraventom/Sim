@@ -7,239 +7,94 @@ using Sim.Utils;
 
 namespace Sim.Model;
 
-internal class PathBuilder(ILogger<PathBuilder> logger, Map map, RaycasterFactory raycasterFactory)
+internal class PathBuilder(ILogger<PathBuilder> logger, Map map, Raycaster raycaster, int movableId, Size movableSize)
 {
     private const double EVADE_DISTANCE_MODIFIER = 2.0;
+    private Size EvadeDist { get; } = movableSize * EVADE_DISTANCE_MODIFIER;
 
-    public void BuildPath(Movable movable)
+    private Path Path { get; set; }
+
+    public Path BuildPath(Point from, Point to)
     {
-        var evadeDist = GetEvadeDistance(movable);
-        var raycaster = raycasterFactory.Build([movable.Id]);
-        SplitLine(raycaster, movable, movable.Path.StartNode, movable.Path.EndNode, evadeDist);
+        Path = new Path(from, to);
+        SplitLine(Path.StartNode, Path.EndNode);
+        return Path;
     }
 
-    private void SplitLine(Raycaster raycaster, Movable movable, LinkedListNode<Point> start, LinkedListNode<Point> end, Size evadeDist)
+    private void SplitLine(LinkedListNode<Point> start, LinkedListNode<Point> end)
     {
         var result = raycaster.Cast(start.Value, end.Value);
-        if (result.Hits.Count == 0)
+        if (!result.HasHit())
             return;
 
-        var hit = result.Hits[0];
+        var objRect = map[result.Hit.Id];
+        var evadePoint = GetEvadePoint(objRect, result.Hit);
 
-        var prevNode = start;
+        Point point;
 
-        var objRect = map[hit.Id];
-        var hitRect = BuildHitRect(hit);
-        var corners = SplitIntoCorners(hit, hitRect, objRect);
+        if (start.Value != evadePoint.Main && CheckPoint(evadePoint.Main))
+            point = evadePoint.Main;
+        else if (CheckPoint(evadePoint.Alt))
+            point = evadePoint.Alt;
+        else
+            point = Point.INVALID;
 
-        var inflatedObjRect = new Rect(objRect.Left - evadeDist.Width, objRect.Top - evadeDist.Height, objRect.Right + evadeDist.Width, objRect.Bottom + evadeDist.Height);
-        foreach (var corner in corners)
+        if (point.IsInvalid())
         {
-            var targetPoint = GetTargetPoint(corner, objRect, inflatedObjRect, hit, movable.Size);
-            if (targetPoint.IsInvalid())
-            {
-                logger.LogError("Generated target point {Target} is not accessible by {Id}, path is probably broken!", targetPoint, movable.Id);
-                continue;
-            }
-
-            var newNode = movable.Path.AddAfter(prevNode, targetPoint);
-            SplitLine(raycaster, movable, prevNode, newNode, evadeDist);
-            prevNode = newNode;
+            logger.LogError("Generated target point {Target} is not accessible by {Id}, path is probably broken!", point, movableId);
+            return;
         }
 
-        SplitLine(raycaster, movable, prevNode, end, evadeDist);
+        var newNode = Path.AddAfter(start, point);
+        SplitLine(start, newNode);
+        SplitLine(newNode, end);
     }
 
-    private Point GetTargetPoint(Rect corner, Rect objRect, Rect inflatedObjRect, RaycastHit hit, Size movableSize)
+    private bool CheckPoint(Point point)
     {
-        var mainPoint = GetMainPoint(corner, objRect, inflatedObjRect);
-        if (mainPoint.IsInvalid())
-        {
-            logger.LogInformation("Failed to get target point for {Corner} and {ObjRect}, path is probably broken!", corner, objRect);
-            return Point.INVALID;
-        }
+        var targetRect = new Rect(point, movableSize);
+        Rect.ClampToMap(ref targetRect);
 
-        var point = mainPoint;
-
-        for (int i = 0; i < 2; ++i)
-        {
-            var targetRect = new Rect(point, movableSize);
-            Rect.ClampToMap(ref targetRect);
-
-            var grid = map.GetAreaGrid(targetRect);
-            if (map.CanPlace(grid, targetRect))
-                return point;
-
-            point = GetAltPoint(objRect, inflatedObjRect, mainPoint, hit);
-        }
-
-        return Point.INVALID;
+        var grid = map.GetAreaGrid(targetRect);
+        return map.CanPlace(grid, targetRect);
     }
 
-    private Size GetEvadeDistance(Movable movable) => movable.Size * EVADE_DISTANCE_MODIFIER;
-
-    private Point GetAltPoint(Rect objectRect, Rect inflatedRect, Point mainPoint, RaycastHit hit)
+    private EvadePoint GetEvadePoint(Rect objectRect, RaycastHit hit)
     {
-        if (CMP.Equals(mainPoint, objectRect.TopLeft, Raycaster.RAYCAST_STEP))
+        var leftOffset = Math.Abs(hit.Enter.X - objectRect.Left);
+        var rightOffset = Math.Abs(hit.Enter.X - objectRect.Right);
+        var leftHit = CMP.Equals(leftOffset, 0, Raycaster.STEP);
+        var rightHit = CMP.Equals(rightOffset, 0, Raycaster.STEP);
+        var leftEvade = objectRect.Left - EvadeDist.Width;
+        var rightEvade = objectRect.Right + EvadeDist.Width;
+
+        var topOffset = Math.Abs(hit.Enter.Y - objectRect.Top);
+        var bottomOffset = Math.Abs(hit.Enter.Y - objectRect.Bottom);
+        var topHit = CMP.Equals(topOffset, 0, Raycaster.STEP);
+        var bottomHit = CMP.Equals(bottomOffset, 0, Raycaster.STEP);
+        var topEvade = objectRect.Top - EvadeDist.Height;
+        var bottomEvade = objectRect.Bottom + EvadeDist.Height;
+
+        if (leftHit || rightHit)
         {
-            if (CMP.Equals(hit.Enter.Y, objectRect.Top, Raycaster.RAYCAST_STEP))
-                return inflatedRect.TopRight;
-            else
-                return inflatedRect.BottomLeft;
+            var x = leftHit ? leftEvade : rightEvade;
+            var (mainY, altY) = topOffset < bottomOffset ? (topEvade, bottomEvade) : (bottomEvade, topEvade);
+            return new EvadePoint(new Point(x, mainY), new Point(x, altY));
         }
 
-        if (CMP.Equals(mainPoint, objectRect.TopRight, Raycaster.RAYCAST_STEP))
+        if (topHit || bottomHit)
         {
-            if (CMP.Equals(hit.Enter.Y, objectRect.Top, Raycaster.RAYCAST_STEP))
-                return inflatedRect.TopLeft;
-            else
-                return inflatedRect.BottomRight;
+            var (mainX, altX) = leftOffset < rightOffset ? (leftEvade, rightEvade) : (rightEvade, leftEvade);
+            var y = topHit ? topEvade : bottomEvade;
+            return new EvadePoint(new Point(mainX, y), new Point(altX, y));
         }
 
-        if (CMP.Equals(mainPoint, objectRect.BottomLeft, Raycaster.RAYCAST_STEP))
-        {
-            if (CMP.Equals(hit.Enter.Y, objectRect.Bottom, Raycaster.RAYCAST_STEP))
-                return inflatedRect.BottomRight;
-            else
-                return inflatedRect.TopLeft;
-        }
-
-        if (CMP.Equals(mainPoint, objectRect.BottomRight, Raycaster.RAYCAST_STEP))
-        {
-            if (CMP.Equals(hit.Enter.Y, objectRect.Bottom, Raycaster.RAYCAST_STEP))
-                return inflatedRect.BottomLeft;
-            else
-                return inflatedRect.TopRight;
-        }
-
-        logger.LogWarning("Failed to get alt point for {MainPoint}, {ObjRect}, {Hit}", mainPoint, objectRect, hit);
-        return Point.INVALID;
+        return new EvadePoint(Point.INVALID, Point.INVALID);
     }
 
-    private Point GetMainPoint(Rect cornerRect, Rect objectRect, Rect inflatedRect)
+    private struct EvadePoint(Point main, Point alt)
     {
-        if (CMP.Equals(cornerRect.TopLeft, objectRect.TopLeft, Raycaster.RAYCAST_STEP))
-            return inflatedRect.TopLeft;
-
-        if (CMP.Equals(cornerRect.TopRight, objectRect.TopRight, Raycaster.RAYCAST_STEP))
-            return inflatedRect.TopRight;
-
-        if (CMP.Equals(cornerRect.BottomLeft, objectRect.BottomLeft, Raycaster.RAYCAST_STEP))
-            return inflatedRect.BottomLeft;
-
-        if (CMP.Equals(cornerRect.BottomRight, objectRect.BottomRight, Raycaster.RAYCAST_STEP))
-            return inflatedRect.BottomRight;
-
-        logger.LogWarning("Failed to get main point for {Corner} and {ObjRect}", cornerRect, objectRect);
-        return Point.INVALID;
-    }
-
-    private IEnumerable<Rect> SplitIntoCorners(RaycastHit hit, Rect hitRect, Rect objectRect)
-    {
-        // adjust to make sure it touches at least one corner
-        var leftOffset = hitRect.Left - objectRect.Left;
-        var topOffset = hitRect.Top - objectRect.Top;
-        var rightOffset = hitRect.Right - objectRect.Right;
-        var bottomOffset = hitRect.Bottom - objectRect.Bottom;
-
-        if (CMP.Equals(leftOffset, 0, Raycaster.RAYCAST_STEP) || CMP.Equals(rightOffset, 0, Raycaster.RAYCAST_STEP))
-        {
-            if (!CMP.Equals(topOffset, 0, Raycaster.RAYCAST_STEP) && !CMP.Equals(bottomOffset, 0, Raycaster.RAYCAST_STEP))
-            {
-                if (Math.Abs(topOffset) < Math.Abs(bottomOffset))
-                {
-                    var newRect = new Rect(hitRect.Left, objectRect.Top, hitRect.Right, hitRect.Bottom);
-                    hitRect = newRect;
-                }
-                else
-                {
-                    var newRect = new Rect(hitRect.Left, hitRect.Top, hitRect.Right, objectRect.Bottom);
-                    hitRect = newRect;
-                }
-            }
-        }
-
-        if (CMP.Equals(topOffset, 0, Raycaster.RAYCAST_STEP) || CMP.Equals(bottomOffset, 0, Raycaster.RAYCAST_STEP))
-        {
-            if (!CMP.Equals(leftOffset, 0, Raycaster.RAYCAST_STEP) && !CMP.Equals(rightOffset, 0, Raycaster.RAYCAST_STEP))
-            {
-                if (Math.Abs(leftOffset) < Math.Abs(rightOffset))
-                {
-                    var newRect = new Rect(objectRect.Left, hitRect.Top, hitRect.Right, hitRect.Bottom);
-                    hitRect = newRect;
-                }
-                else
-                {
-                    var newRect = new Rect(hitRect.Left, hitRect.Top, objectRect.Right, hitRect.Bottom);
-                    hitRect = newRect;
-                }
-            }
-        }
-
-        // If ray hits opposite sides of the objectRect, the hitRect needs to be split into two "corner" rects
-        if (CMP.Equals(hitRect.Width, objectRect.Width, Raycaster.RAYCAST_STEP))
-        {
-            var leftHalf = new Rect(hitRect.Left, hitRect.Top, hitRect.Center.X, hitRect.Bottom);
-            var rightHalf = new Rect(hitRect.Center.X, hitRect.Top, hitRect.Right, hitRect.Bottom);
-
-            if (hit.Enter.X < hit.Exit.X)
-            {
-                foreach (var leftHalfPart in SplitIntoCorners(hit, leftHalf, objectRect))
-                    yield return leftHalfPart;
-
-                foreach (var rightHalfPart in SplitIntoCorners(hit, rightHalf, objectRect))
-                    yield return rightHalfPart;
-            }
-            else
-            {
-                foreach (var rightHalfPart in SplitIntoCorners(hit, rightHalf, objectRect))
-                    yield return rightHalfPart;
-
-                foreach (var leftHalfPart in SplitIntoCorners(hit, leftHalf, objectRect))
-                    yield return leftHalfPart;
-            }
-
-            yield break;
-        }
-
-        if (CMP.Equals(hitRect.Height, objectRect.Height, Raycaster.RAYCAST_STEP))
-        {
-            var topHalf = new Rect(hitRect.Left, hitRect.Top, hitRect.Right, hitRect.Center.Y);
-            var bottomHalf = new Rect(hitRect.Left, hitRect.Center.Y, hitRect.Right, hitRect.Bottom);
-
-            if (hit.Enter.Y < hit.Exit.Y)
-            {
-                foreach (var topHalfPart in SplitIntoCorners(hit, topHalf, objectRect))
-                    yield return topHalfPart;
-
-                foreach (var bottomHalfPart in SplitIntoCorners(hit, bottomHalf, objectRect))
-                    yield return bottomHalfPart;
-            }
-            else
-            {
-                foreach (var bottomHalfPart in SplitIntoCorners(hit, bottomHalf, objectRect))
-                    yield return bottomHalfPart;
-
-                foreach (var topHalfPart in SplitIntoCorners(hit, topHalf, objectRect))
-                    yield return topHalfPart;
-            }
-
-            yield break;
-        }
-
-        yield return hitRect;
-    }
-
-    private static Rect BuildHitRect(RaycastHit hit)
-    {
-        var left = Math.Min(hit.Enter.X, hit.Exit.X);
-        var top = Math.Min(hit.Enter.Y, hit.Exit.Y);
-        var right = Math.Max(hit.Enter.X, hit.Exit.X);
-        var bottom = Math.Max(hit.Enter.Y, hit.Exit.Y);
-
-        var size = new Size(right - left, bottom - top);
-        var center = new Point(left + size.Width / 2, top + size.Height / 2);
-
-        return new Rect(center, size);
+        public Point Main => main;
+        public Point Alt => alt;
     }
 }

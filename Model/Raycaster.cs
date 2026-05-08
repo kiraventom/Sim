@@ -6,14 +6,16 @@ namespace Sim.Model;
 
 internal class Raycaster
 {
-    public const double RAYCAST_STEP = 0.00001;
+    public const double STEP = 0.00001;
+    public static readonly Size DEFAULT_SIZE = new Size(STEP, STEP);
 
     private Map Map { get; }
     private HashSet<int> IgnoredIds { get; }
 
-    private RaycastHit? CurrentHit { get; set; }
     private Point Current { get; set; }
-    private RaycastResult Result { get; set; }
+
+    private RectI? _grid;
+    private IEnumerable<Area> _areas;
 
     public Raycaster(Map map, IReadOnlyCollection<int> ignoredIds = null)
     {
@@ -27,68 +29,53 @@ internal class Raycaster
         var rayLength = ray.Length;
 
         if (rayLength == 0)
-            return RaycastResult.NoHits;
+            return RaycastResult.NO_HITS;
 
         var dir = ray.Normalize();
         double dist = 0;
 
         Current = start;
-        CurrentHit = null;
-        Result = new RaycastResult();
 
         while (dist <= rayLength)
         {
-            Current += dir * RAYCAST_STEP;
-            dist += RAYCAST_STEP;
+            Current += dir * STEP;
+            dist += STEP;
 
             if (!Current.IsOnMap())
                 break;
 
-            if (!TryAddExit())
-                continue;
-
-            TryAddEnter();
+            if (RegisterHit(out var hit))
+                return new RaycastResult(hit);
         }
 
-        TryAddExit(force: true);
-
-        return Result;
+        return RaycastResult.NO_HITS;
     }
 
-    private bool TryAddExit(bool force = false)
+    private bool RegisterHit(out RaycastHit hit)
     {
-        if (CurrentHit is {} h)
+        var grid = Map.GetAreaGrid(new Rect(Current, DEFAULT_SIZE));
+        if (grid != _grid)
         {
-            if (!force && Map[h.Id].Contains(Current))
-                return false;
-
-            var hit = new RaycastHit(h.Id, h.Enter, Current);
-            Result.Add(hit);
-            CurrentHit = null;
+            _grid = grid;
+            _areas = Map.GetAreasByGrid(grid);
         }
 
-        return true;
-    }
-
-    private bool TryAddEnter()
-    {
-        var grid = Map.GetAreaGrid(new Rect(Current, new Size(RAYCAST_STEP, RAYCAST_STEP)));
-
-        foreach (var area in Map.GetAreasByGrid(grid))
+        foreach (var area in _areas)
         {
             foreach (var id in area.ObjectIds)
             {
-                if (IgnoredIds.Contains(id) || Result.ContainsId(id))
+                if (IgnoredIds.Contains(id))
                     continue;
 
                 if (Map[id].Contains(Current))
                 {
-                    CurrentHit = new RaycastHit(id, Current, Point.INVALID);
+                    hit = new RaycastHit(id, Current);
                     return true;
                 }
             }
         }
 
+        hit = RaycastHit.INVALID;
         return false;
     }
 }

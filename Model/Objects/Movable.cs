@@ -1,12 +1,13 @@
 ﻿using Sim.Geometry;
+using Sim.Utils;
 
 namespace Sim.Model.Objects;
 
-internal abstract class Movable(PathBuilder pathBuilder, int id) : SimObject(id)
+internal abstract class Movable(PathBuilderFactory pathBuilderFactory, int id) : SimObject(id)
 {
     public double Speed { get; protected init; }
 
-    public Path Path { get; } = new();
+    public Path Path { get; private set; }
 
     internal Point GetDirectMoveOffset(Point pos, Point targetPos)
     {
@@ -25,13 +26,13 @@ internal abstract class Movable(PathBuilder pathBuilder, int id) : SimObject(id)
     {
         if (HasReachedTarget(pos))
         {
-            Path.OnTargetReached();
+            Path?.OnTargetReached();
 
-            if (Path.IsCovered)
+            if (Path is null || Path.IsCovered)
             {
                 var target = GetNewTarget(pos);
-                Path.New(pos, target);
-                pathBuilder.BuildPath(this);
+                var pathBuilder = pathBuilderFactory.Build(Id, Size);
+                Path = pathBuilder.BuildPath(pos, target);
             }
         }
 
@@ -41,6 +42,6 @@ internal abstract class Movable(PathBuilder pathBuilder, int id) : SimObject(id)
 
     protected abstract Point GetNewTarget(Point pos);
 
-    protected bool HasReachedTarget(Point currentPos) => Path.IsCovered || new Rect(currentPos, new Size(0.0001, 0.0001)).Intersects(new Rect(Path.TargetPoint, new Size(0.0001, 0.0001)));
+    protected bool HasReachedTarget(Point currentPos) => Path is null || Path.IsCovered || CMP.Equals(currentPos, Path.TargetPoint);
 }
 

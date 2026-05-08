@@ -89,10 +89,9 @@ public class HostBuilder
         _builder.Services
             .AddSingleton<WorldSettings>(_settings)
             .AddSingleton<Map>()
-            .AddSingleton<RaycasterFactory>()
+            .AddSingleton<PathBuilderFactory>()
             .AddSingleton<World>()
             .AddSingleton<ObjectInfoBuilder>()
-            .AddSingleton<PathBuilder>()
             .AddSingleton<EntityBuilder>()
             .AddSingleton<EntityCache>()
             .AddSingleton<IdContainer>()

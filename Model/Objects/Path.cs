@@ -3,7 +3,7 @@ using Sim.Geometry;
 
 namespace Sim.Model.Objects;
 
-internal class Path
+public class Path
 {
     private LinkedList<Point> Points { get; } = [];
 
@@ -18,23 +18,21 @@ internal class Path
     public Point TargetPoint => TargetNode.Value;
     public LinkedListNode<Point> TargetNode { get; private set; }
 
+    public Path(Point start, Point end)
+    {
+        Points.AddFirst(start);
+        Points.AddLast(end);
+        TargetNode = Points.Last;
+    }
+
     public void OnTargetReached() => TargetNode = TargetNode?.Next;
 
-    public LinkedListNode<Point> AddAfter(LinkedListNode<Point> nodeToAddAfter, Point point)
+    internal LinkedListNode<Point> AddAfter(LinkedListNode<Point> nodeToAddAfter, Point point)
     {
         var newNode = Points.AddAfter(nodeToAddAfter, point);
         if (nodeToAddAfter == StartNode)
             TargetNode = newNode;
 
         return newNode;
-    }
-
-    public void New(Point start, Point end)
-    {
-        Points.Clear();
-        Points.AddFirst(start);
-        Points.AddLast(end);
-
-        TargetNode = Points.Last;
     }
 }

@@ -1,3 +1,5 @@
+using System;
+
 namespace Sim.Geometry;
 
 public readonly struct RectI(PointI pos, SizeI size)
@@ -14,7 +16,12 @@ public readonly struct RectI(PointI pos, SizeI size)
     public int Width => Size.Width;
     public int Height => Size.Height;
 
+    public static bool operator ==(RectI a, RectI b) => a.TopLeft == b.TopLeft && a.Size == b.Size;
+    public static bool operator !=(RectI a, RectI b) => a.TopLeft != b.TopLeft || a.Size != b.Size;
 
     private readonly string _str = $"[{pos.X}:{pos.Y} {size.Width}x{size.Height}]";
     public override string ToString() => _str;
+
+    public override bool Equals(object obj) => obj is RectI r && r == this;
+    public override int GetHashCode() => HashCode.Combine(TopLeft, Size);
 }

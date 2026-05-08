@@ -1,11 +1,10 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using Sim.Model.Objects;
 
 namespace Sim.Model.Entities;
 
-internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map, PathBuilder DBG_Pathfinder)
+internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map)
 {
     public EntitySnapshot UpdateSnapshot(EntitySnapshot snapshot)
     {
