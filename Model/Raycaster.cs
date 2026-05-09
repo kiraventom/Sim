@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,19 +8,22 @@ namespace Sim.Model;
 internal class Raycaster
 {
     public const double STEP = 0.00001;
-    public static readonly Size DEFAULT_SIZE = new Size(STEP, STEP);
 
+    private ILogger<Raycaster> Logger { get; }
     private Map Map { get; }
     private HashSet<int> IgnoredIds { get; }
+    private Size Size { get; }
 
-    private Point Current { get; set; }
+    private Rect CurrentRect { get; set; }
 
     private RectI? _grid;
     private IEnumerable<Area> _areas;
 
-    public Raycaster(Map map, IReadOnlyCollection<int> ignoredIds = null)
+    public Raycaster(ILogger<Raycaster> logger, Map map, Size size, IReadOnlyCollection<int> ignoredIds = null)
     {
+        Logger = logger;
         Map = map;
+        Size = size;
         IgnoredIds = ignoredIds?.ToHashSet() ?? [];
     }
 
@@ -34,14 +38,14 @@ internal class Raycaster
         var dir = ray.Normalize();
         double dist = 0;
 
-        Current = start;
+        CurrentRect = new Rect(start, Size);
 
         while (dist <= rayLength)
         {
-            Current += dir * STEP;
+            CurrentRect = CurrentRect.Offset(dir * STEP);
             dist += STEP;
 
-            if (!Current.IsOnMap())
+            if (!CurrentRect.Pos.IsOnMap())
                 break;
 
             if (RegisterHit(out var hit))
@@ -53,7 +57,7 @@ internal class Raycaster
 
     private bool RegisterHit(out RaycastHit hit)
     {
-        var grid = Map.GetAreaGrid(new Rect(Current, DEFAULT_SIZE));
+        var grid = Map.GetAreaGrid(CurrentRect);
         if (grid != _grid)
         {
             _grid = grid;
@@ -67,9 +71,17 @@ internal class Raycaster
                 if (IgnoredIds.Contains(id))
                     continue;
 
-                if (Map[id].Contains(Current))
+                var objectRect = Map[id];
+                if (objectRect.Intersects(CurrentRect))
                 {
-                    hit = new RaycastHit(id, Current);
+                    var intersectionPoint = GetIntersectionPoint(objectRect, CurrentRect);
+                    if (intersectionPoint.IsInvalid())
+                    {
+                        Logger.LogWarning("Failed to get intersection point for object {Obj}, movable {Mov}", objectRect, CurrentRect);
+                        continue;
+                    }
+
+                    hit = new RaycastHit(id, intersectionPoint);
                     return true;
                 }
             }
@@ -77,6 +89,45 @@ internal class Raycaster
 
         hit = RaycastHit.INVALID;
         return false;
+    }
+
+    private Point GetIntersectionPoint(Rect objectRect, Rect movableRect)
+    {
+        var topLeftHit = objectRect.Contains(movableRect.TopLeft);
+        var topRightHit = objectRect.Contains(movableRect.TopRight);
+        var bottomRightHit = objectRect.Contains(movableRect.BottomRight);
+        var bottomLeftHit = objectRect.Contains(movableRect.BottomLeft);
+
+        var topHit = topLeftHit && topRightHit;
+        var bottomHit = bottomLeftHit && bottomRightHit;
+        var leftHit = topLeftHit && bottomLeftHit;
+        var rightHit = topRightHit && bottomRightHit;
+
+        if (topHit)
+            return new Point(movableRect.Center.X, objectRect.Bottom);
+
+        if (bottomHit)
+            return new Point(movableRect.Center.X, objectRect.Top);
+
+        if (leftHit)
+            return new Point(objectRect.Right, movableRect.Center.Y);
+
+        if (rightHit)
+            return new Point(objectRect.Left, movableRect.Center.Y);
+
+        if (topLeftHit)
+            return objectRect.BottomRight;
+
+        if (topRightHit)
+            return objectRect.BottomLeft;
+
+        if (bottomLeftHit)
+            return objectRect.TopRight;
+
+        if (bottomRightHit)
+            return objectRect.TopLeft;
+
+        return Point.INVALID;
     }
 }
 

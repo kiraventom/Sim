@@ -1,3 +1,2 @@
-- fix raycast not accounting for movable size
 - evade dynamic obstacles (pass the one with higher ID)
 - optimize

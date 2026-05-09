@@ -52,6 +52,7 @@ public readonly struct Rect
     public Rect Offset(Point offset) => new Rect(Pos + offset, Size);
 
     public bool Intersects(Rect rect) => Left < rect.Right && Right > rect.Left && Top < rect.Bottom && Bottom > rect.Top;
+
     public bool Contains(Point p) => p.X >= Left && p.X <= Right && p.Y >= Top && p.Y <= Bottom;
 
     public static bool ClampToMap(ref Rect rect)

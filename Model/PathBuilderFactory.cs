@@ -7,7 +7,7 @@ internal class PathBuilderFactory(ILoggerFactory loggerFactory, Map map)
 {
     internal PathBuilder Build(int id, Size size)
     {
-        var raycaster = new Raycaster(map, [id]);
+        var raycaster = new Raycaster(loggerFactory.CreateLogger<Raycaster>(), map, size, [id]);
         return new PathBuilder(loggerFactory.CreateLogger<PathBuilder>(), map, raycaster, id, size);
     }
 }
