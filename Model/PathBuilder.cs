@@ -12,16 +12,14 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, Raycaster rayca
     private const double EVADE_DISTANCE_MODIFIER = 2.0;
     private Size EvadeDist { get; } = movableSize * EVADE_DISTANCE_MODIFIER;
 
-    private Path Path { get; set; }
-
     public Path BuildPath(Point from, Point to)
     {
-        Path = new Path(from, to);
-        SplitLine(Path.StartNode, Path.EndNode);
-        return Path;
+        var path = new Path(from, to);
+        SplitLine(path, path.StartNode, path.EndNode);
+        return path;
     }
 
-    private void SplitLine(LinkedListNode<Point> start, LinkedListNode<Point> end)
+    private void SplitLine(Path path, LinkedListNode<Point> start, LinkedListNode<Point> end)
     {
         var result = raycaster.Cast(start.Value, end.Value);
         if (!result.HasHit())
@@ -45,9 +43,9 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, Raycaster rayca
             return;
         }
 
-        var newNode = Path.AddAfter(start, point);
-        SplitLine(start, newNode);
-        SplitLine(newNode, end);
+        var newNode = path.AddAfter(start, point);
+        SplitLine(path, start, newNode);
+        SplitLine(path, newNode, end);
     }
 
     private bool CheckPoint(Point point)
