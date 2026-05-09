@@ -30,9 +30,16 @@ internal abstract class Movable(PathBuilderFactory pathBuilderFactory, int id) :
 
             if (Path is null || Path.IsCovered)
             {
-                var target = GetNewTarget(pos);
                 var pathBuilder = pathBuilderFactory.Build(Id, Size);
-                Path = pathBuilder.BuildPath(pos, target);
+
+                Path = null;
+                while (Path is null)
+                {
+                    var target = GetNewTarget(pos);
+                    var pathBuilt = pathBuilder.TryBuildPath(pos, target, out var path);
+                    if (pathBuilt)
+                        Path = path;
+                }
             }
         }
 

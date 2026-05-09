@@ -12,18 +12,22 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, Raycaster rayca
     private const double EVADE_DISTANCE_MODIFIER = 2.0;
     private Size EvadeDist { get; } = movableSize * EVADE_DISTANCE_MODIFIER;
 
-    public Path BuildPath(Point from, Point to)
+    public bool TryBuildPath(Point from, Point to, out Path path)
     {
-        var path = new Path(from, to);
-        SplitLine(path, path.StartNode, path.EndNode);
-        return path;
+        path = new Path(from, to);
+        var pathBuilt = SplitLine(path, path.StartNode, path.EndNode);
+        if (!pathBuilt)
+            return false;
+
+        MergeLine(path, path.StartNode);
+        return true;
     }
 
-    private void SplitLine(Path path, LinkedListNode<Point> start, LinkedListNode<Point> end)
+    private bool SplitLine(Path path, LinkedListNode<Point> start, LinkedListNode<Point> end)
     {
         var result = raycaster.Cast(start.Value, end.Value);
         if (!result.HasHit())
-            return;
+            return true;
 
         var objRect = map[result.Hit.Id];
         var evadePoint = GetEvadePoint(objRect, result.Hit);
@@ -40,12 +44,38 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, Raycaster rayca
         if (point.IsInvalid())
         {
             logger.LogError("Generated target point {Target} is not accessible by {Id}, path is probably broken!", point, movableId);
-            return;
+            return false;
         }
 
         var newNode = path.AddAfter(start, point);
-        SplitLine(path, start, newNode);
-        SplitLine(path, newNode, end);
+        var hasBuiltStart = SplitLine(path, start, newNode);
+        var hasBuiltEnd = SplitLine(path, newNode, end);
+
+        return hasBuiltStart && hasBuiltEnd;
+    }
+
+    private void MergeLine(Path path, LinkedListNode<Point> node)
+    {
+        if (node is null)
+            return;
+
+        var otherNode = node.Next?.Next;
+
+        while (otherNode != null)
+        {
+            var result = raycaster.Cast(node.Value, otherNode.Value);
+            if (!result.HasHit())
+            {
+                while (node.Next != otherNode)
+                {
+                    path.Remove(node.Next);
+                }
+            }
+
+            otherNode = otherNode.Next;
+        }
+
+        MergeLine(path, node.Next);
     }
 
     private bool CheckPoint(Point point)

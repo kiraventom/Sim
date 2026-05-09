@@ -35,4 +35,17 @@ public class Path
 
         return newNode;
     }
+
+    internal void Remove(LinkedListNode<Point> nodeToRemove)
+    {
+        if (nodeToRemove == TargetNode)
+        {
+            if (nodeToRemove.Next != null)
+                TargetNode = nodeToRemove.Next;
+            else
+                TargetNode = nodeToRemove.Previous;
+        }
+
+        Points.Remove(nodeToRemove);
+    }
 }
