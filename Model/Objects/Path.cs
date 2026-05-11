@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sim.Geometry;
+using Sim.Utils;
 
 namespace Sim.Model.Objects;
 
@@ -25,7 +26,11 @@ public class Path
         TargetNode = Points.Last;
     }
 
-    public void OnTargetReached() => TargetNode = TargetNode?.Next;
+    public void UpdateTarget(Point currentPos)
+    {
+        if (CMP.Equals(currentPos, TargetPoint))
+            TargetNode = TargetNode?.Next;
+    }
 
     internal LinkedListNode<Point> AddAfter(LinkedListNode<Point> nodeToAddAfter, Point point)
     {

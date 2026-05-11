@@ -9,6 +9,13 @@ internal abstract class Movable(PathBuilderFactory pathBuilderFactory, int id) :
 
     public Path Path { get; private set; }
 
+    public Point GetMoveOffset(Point pos)
+    {
+        UpdatePath(pos);
+
+        return GetDirectMoveOffset(pos, Path.TargetPoint);
+    }
+
     internal Point GetDirectMoveOffset(Point pos, Point targetPos)
     {
         var traj = targetPos - pos;
@@ -22,33 +29,26 @@ internal abstract class Movable(PathBuilderFactory pathBuilderFactory, int id) :
         return offset;
     }
 
-    public Point GetMoveOffset(Point pos)
-    {
-        if (HasReachedTarget(pos))
-        {
-            Path?.OnTargetReached();
-
-            if (Path is null || Path.IsCovered)
-            {
-                var pathBuilder = pathBuilderFactory.Build(Id, Size);
-
-                Path = null;
-                while (Path is null)
-                {
-                    var target = GetNewTarget(pos);
-                    var pathBuilt = pathBuilder.TryBuildPath(pos, target, out var path);
-                    if (pathBuilt)
-                        Path = path;
-                }
-            }
-        }
-
-        var targetPos = Path.TargetPoint;
-        return GetDirectMoveOffset(pos, targetPos);
-    }
-
     protected abstract Point GetNewTarget(Point pos);
 
-    protected bool HasReachedTarget(Point currentPos) => Path is null || Path.IsCovered || CMP.Equals(currentPos, Path.TargetPoint);
-}
+    private void UpdatePath(Point pos)
+    {
+        Path?.UpdateTarget(pos);
 
+        if (Path is { IsCovered: false })
+            return;
+
+        Path = null;
+
+        var pathBuilder = pathBuilderFactory.Build(Id, Size);
+
+        // TODO: More complex logic in case of failing to build path
+        while (Path is null)
+        {
+            var target = GetNewTarget(pos);
+            var pathBuilt = pathBuilder.TryBuildPath(pos, target, out var path);
+            if (pathBuilt)
+                Path = path;
+        }
+    }
+}
