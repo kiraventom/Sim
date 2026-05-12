@@ -5,10 +5,9 @@ namespace Sim.Model;
 
 internal class PathBuilderFactory(ILoggerFactory loggerFactory, Map map)
 {
-    internal PathBuilder Build(int id, Size size)
+    internal PathBuilder Build(int id, Size size, RaycasterFactory raycasterFactory)
     {
-        var raycaster = new Raycaster(loggerFactory.CreateLogger<Raycaster>(), map, size, [id]);
-        return new PathBuilder(loggerFactory.CreateLogger<PathBuilder>(), map, raycaster, id, size);
+        return new PathBuilder(loggerFactory.CreateLogger<PathBuilder>(), map, raycasterFactory, id, size);
     }
 }
 

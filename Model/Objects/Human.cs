@@ -9,7 +9,7 @@ internal class Human : Movable
 
     public override Size Size => new Size(0.005, 0.005);
 
-    public Human(Map map, PathBuilderFactory pathBuilderFactory, int id) : base(pathBuilderFactory, id)
+    public Human(Map map, MovableDetector movableDetector, RaycasterFactory raycasterFactory, PathBuilderFactory pathBuilderFactory, int id) : base(movableDetector, raycasterFactory, pathBuilderFactory, id)
     {
         const double SpeedModMin = 0.0015;
         const double SpeedModMax = 0.003;

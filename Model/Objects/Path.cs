@@ -35,7 +35,7 @@ public class Path
     internal LinkedListNode<Point> AddAfter(LinkedListNode<Point> nodeToAddAfter, Point point)
     {
         var newNode = Points.AddAfter(nodeToAddAfter, point);
-        if (nodeToAddAfter == StartNode)
+        if (TargetNode?.Previous == newNode)
             TargetNode = newNode;
 
         return newNode;

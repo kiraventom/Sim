@@ -1,2 +1,2 @@
-- evade dynamic obstacles (pass the one with higher ID)
+- fix every-frame path rebuild on dynamic evasion
 - optimize

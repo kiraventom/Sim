@@ -7,7 +7,7 @@ using Sim.Utils;
 
 namespace Sim.Model;
 
-internal class PathBuilder(ILogger<PathBuilder> logger, Map map, Raycaster raycaster, int movableId, Size movableSize)
+internal class PathBuilder(ILogger<PathBuilder> logger, Map map, RaycasterFactory raycasterFactory, int movableId, Size movableSize)
 {
     private const double EVADE_DISTANCE_MODIFIER = 2.0;
     private Size EvadeDist { get; } = movableSize * EVADE_DISTANCE_MODIFIER;
@@ -25,7 +25,8 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, Raycaster rayca
 
     private bool SplitLine(Path path, LinkedListNode<Point> start, LinkedListNode<Point> end)
     {
-        var result = raycaster.Cast(start.Value, end.Value);
+        var raycaster = raycasterFactory.Build(movableId);
+        var result = raycaster.Cast(start.Value, end.Value, ignoreMovables: false);
         if (!result.HasHit())
             return true;
 
@@ -63,7 +64,8 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, Raycaster rayca
 
         while (otherNode != null)
         {
-            var result = raycaster.Cast(node.Value, otherNode.Value);
+            var raycaster = raycasterFactory.Build(movableId);
+            var result = raycaster.Cast(node.Value, otherNode.Value, ignoreMovables: false);
             if (!result.HasHit())
             {
                 while (node.Next != otherNode)
@@ -80,7 +82,7 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, Raycaster rayca
 
     private bool CheckPoint(Point point)
     {
-        var targetRect = new Rect(point, movableSize);
+        var targetRect = new Rect(point, map[movableId].Size);
         Rect.ClampToMap(ref targetRect);
 
         var grid = map.GetAreaGrid(targetRect);

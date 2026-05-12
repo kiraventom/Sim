@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Sim.Geometry;
+using Sim.Model.Objects;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Sim.Model;
 
@@ -10,8 +10,9 @@ internal class Raycaster
     public const double STEP = 0.00001;
 
     private ILogger<Raycaster> Logger { get; }
+    private World World { get; }
     private Map Map { get; }
-    private HashSet<int> IgnoredIds { get; }
+    private int Id { get; }
     private Size Size { get; }
 
     private Rect CurrentRect { get; set; }
@@ -19,15 +20,16 @@ internal class Raycaster
     private RectI? _grid;
     private IEnumerable<Area> _areas;
 
-    public Raycaster(ILogger<Raycaster> logger, Map map, Size size, IReadOnlyCollection<int> ignoredIds = null)
+    public Raycaster(ILogger<Raycaster> logger, World world, Map map, int movableId)
     {
         Logger = logger;
+        World = world;
         Map = map;
-        Size = size;
-        IgnoredIds = ignoredIds?.ToHashSet() ?? [];
+        Id = movableId;
+        Size = map[Id].Size;
     }
 
-    public RaycastResult Cast(Point start, Point target)
+    public RaycastResult Cast(Point start, Point target, bool ignoreMovables = true)
     {
         var ray = target - start;
         var rayLength = ray.Length;
@@ -48,14 +50,14 @@ internal class Raycaster
             if (!CurrentRect.Pos.IsOnMap())
                 break;
 
-            if (RegisterHit(out var hit))
+            if (RegisterHit(ignoreMovables, out var hit))
                 return new RaycastResult(hit);
         }
 
         return RaycastResult.NO_HITS;
     }
 
-    private bool RegisterHit(out RaycastHit hit)
+    private bool RegisterHit(bool ignoreMovables, out RaycastHit hit)
     {
         var grid = Map.GetAreaGrid(CurrentRect);
         if (grid != _grid)
@@ -68,7 +70,10 @@ internal class Raycaster
         {
             foreach (var id in area.ObjectIds)
             {
-                if (IgnoredIds.Contains(id))
+                if (id == Id)
+                    continue;
+
+                if (ignoreMovables && World.Objects[id] is Movable)
                     continue;
 
                 var objectRect = Map[id];
