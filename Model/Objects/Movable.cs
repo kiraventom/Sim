@@ -4,15 +4,13 @@ namespace Sim.Model.Objects;
 
 internal abstract class Movable : SimObject
 {
-    private MovableDetector Detector { get; }
+    private MovableEvader Evader { get; }
     private PathBuilder PathBuilder { get; }
     private RaycasterFactory RaycasterFactory { get; }
 
-    public bool IsFrozen { get; set; }
-
-    public Movable(MovableDetector movableDetector, RaycasterFactory raycasterFactory, PathBuilderFactory pathBuilderFactory, int id) : base(id)
+    public Movable(MovableEvader movableEvader, RaycasterFactory raycasterFactory, PathBuilderFactory pathBuilderFactory, int id) : base(id)
     {
-        Detector = movableDetector;
+        Evader = movableEvader;
         RaycasterFactory = raycasterFactory;
         PathBuilder = pathBuilderFactory.Build(Id, Size, raycasterFactory);
     }
@@ -26,36 +24,28 @@ internal abstract class Movable : SimObject
         UpdatePath(pos);
         var offset = GetDirectMoveOffset(pos, Path.TargetPoint);
 
-        IsFrozen = false;
-
-        var detectedIds = Detector.Detect(Id, offset);
-        int? maxDetectedId = null;
-        foreach (var detectedId in detectedIds)
+        var action = Evader.Evade(Id);
+        switch (action)
         {
-            if (maxDetectedId is null || detectedId > maxDetectedId)
-                maxDetectedId = detectedId;
-        }
-
-        // if anything detected
-        if (maxDetectedId != null)
-        {
-            if (Id > maxDetectedId.Value)
-            {
+            case MovableAction.BuildPath:
                 if (PathBuilder.TryBuildPath(pos, Path.End, out var path))
                 {
                     Path = path;
+                    Evader.NotifyPathBuilt(Id);
                     return GetDirectMoveOffset(pos, Path.TargetPoint);
                 }
-            }
-            else
-            {
-                IsFrozen = true;
+                break;
+
+            case MovableAction.Freeze:
                 return Point.ZERO;
-            }
+
+            case MovableAction.Continue:
+                return offset;
         }
 
         return offset;
     }
+
     internal Point GetDirectMoveOffset(Point pos, Point targetPos)
     {
         var traj = targetPos - pos;

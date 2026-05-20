@@ -43,16 +43,21 @@ public partial class MainWindow : Window
 
         Task.Run(async () =>
         {
-            try
+            while (!cts.Token.IsCancellationRequested)
             {
-                while (!cts.Token.IsCancellationRequested)
+                try
                 {
                     Dispatcher.Invoke(() => InfoText.Text = worldHost.GetInfo(worldHost.SelectedObjectId));
-                    await Task.Delay(100, cts.Token);
                 }
-            }
-            catch (TaskCanceledException)
-            {
+                catch (TaskCanceledException)
+                {
+                }
+                catch (Exception e)
+                {
+                    Dispatcher.Invoke(() => InfoText.Text = e.ToString());
+                }
+
+                await Task.Delay(100, cts.Token);
             }
         }, cts.Token);
 

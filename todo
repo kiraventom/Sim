@@ -1,2 +1,2 @@
-- fix every-frame path rebuild on dynamic evasion
+- fix every-frame path rebuild when two movables move in parallel
 - optimize

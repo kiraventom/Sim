@@ -4,7 +4,7 @@ using Sim.Model.Objects;
 
 namespace Sim.Model.Entities;
 
-internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map)
+internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map, MovableDetector detector)
 {
     public EntitySnapshot UpdateSnapshot(EntitySnapshot snapshot)
     {
@@ -24,23 +24,13 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
             {
                 case Human human when human.Path is Path path:
                     snapshot.Add(new HumanEntity(human.Id, absRect));
-
-                    var node = path.StartNode;
-                    while (true)
-                    {
-                        var nextNode = node.Next;
-                        if (nextNode is null)
-                            break;
-
-                        var pointA = node.Value.ToEntityPoint(settings);
-                        var pointB = nextNode.Value.ToEntityPoint(settings);
-                        snapshot.Add(new LineEntity(id, pointA, pointB, isMainPath: true));
-                        node = node.Next;
-                    }
+                    AddPath(snapshot, id, path);
+                    snapshot.Add(new DetectionDistEntity(human.Id, detector.GetDetectionRect(human).ToEntityRect(settings)));
                     break;
 
                 case Human h:
                     snapshot.Add(new HumanEntity(h.Id, absRect));
+                    snapshot.Add(new DetectionDistEntity(h.Id, detector.GetDetectionRect(h).ToEntityRect(settings)));
                     break;
 
                 case Obstacle o:
@@ -52,6 +42,22 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
         }
 
         return snapshot;
+    }
+
+    private void AddPath(EntitySnapshot snapshot, int id, Path path)
+    {
+        var node = path.StartNode;
+        while (true)
+        {
+            var nextNode = node.Next;
+            if (nextNode is null)
+                break;
+
+            var pointA = node.Value.ToEntityPoint(settings);
+            var pointB = nextNode.Value.ToEntityPoint(settings);
+            snapshot.Add(new LineEntity(id, pointA, pointB));
+            node = node.Next;
+        }
     }
 
     private void AddAreas(EntitySnapshot snapshot, int id, Rect rect)

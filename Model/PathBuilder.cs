@@ -86,7 +86,7 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, RaycasterFactor
         Rect.ClampToMap(ref targetRect);
 
         var grid = map.GetAreaGrid(targetRect);
-        return map.CanPlace(grid, targetRect);
+        return map.CanPlace(grid, targetRect, movableId);
     }
 
     private EvadePoint GetEvadePoint(Rect objectRect, RaycastHit hit)

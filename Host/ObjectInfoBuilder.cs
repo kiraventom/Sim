@@ -1,10 +1,11 @@
-﻿using Sim.Model;
+﻿using System.Linq;
+using Sim.Model;
 using Sim.Model.Entities;
 using Sim.Model.Objects;
 
 namespace Sim.Host;
 
-internal class ObjectInfoBuilder(Map map, WorldSettings settings)
+internal class ObjectInfoBuilder(Map map, WorldSettings settings, MovableDetector detector)
 {
     public string Build(SimObject obj)
     {
@@ -15,8 +16,8 @@ internal class ObjectInfoBuilder(Map map, WorldSettings settings)
 
         return obj switch
         {
-            Human h => new HumanInfo(h.Id, rect, h.Speed * settings.MapWidth, h.Path.Start.ToEntityPoint(settings), h.Path.End.ToEntityPoint(settings)).Text,
-            _ => new DefaultInfo(obj.Id).Text
+            Human h => new HumanInfo(h.Id, rect, h.Speed * settings.MapWidth, h.Path.Start.ToEntityPoint(settings), h.Path.End.ToEntityPoint(settings), detector.Detect(h.Id).ToList()).Text,
+            _ => new DefaultInfo(obj.Id).Text,
         };
     }
 }

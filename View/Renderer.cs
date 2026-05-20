@@ -116,10 +116,6 @@ public abstract class Renderer
                 var isSelected = entity.ObjectId == selectedObjectId;
                 var brush = entity switch
                 {
-                    {} when entity.IsMainPath && isSelected => Brushes.SelectedMainPathLine,
-                    {} when entity.IsMainPath => Brushes.MainPathLine,
-                    {} when entity.IsAltPath && isSelected => Brushes.SelectedAltPathLine,
-                    {} when entity.IsAltPath => Brushes.AltPathLine,
                     {} when isSelected => Brushes.SelectedLine,
                     _ => Brushes.Line
                 };
@@ -154,6 +150,19 @@ public abstract class Renderer
 
             if (isSelected)
                 DrawInfo(canvas, rect, entity.ObjectId);
+        }
+
+        foreach (var entity in _snapshot.DetectionDists)
+        {
+            var isSelected = entity.ObjectId == selectedObjectId;
+            if (!isSelected)
+                continue;
+
+            var brush = Brushes.Visor;
+
+            var rect = ToSKRect(entity.Rect);
+            ApplyRenderScale(ref rect);
+            DrawRect(canvas, ref rect, brush);
         }
     }
 

@@ -17,8 +17,6 @@ public static class Brushes
     public static SKPaint Unknown { get; } = new SKPaint { Color = SKColors.Pink };
     public static SKPaint Info { get; } = new SKPaint { Color = SKColors.White };
     public static SKPaint Line { get; } = new SKPaint { Color = SKColors.Gray.WithAlpha(70), IsStroke = true, PathEffect = SKPathEffect.CreateDash([ 5, 5 ], 0) };
-    public static SKPaint MainPathLine { get; } = new SKPaint { Color = SKColors.SkyBlue.WithAlpha(70), IsStroke = true, PathEffect = SKPathEffect.CreateDash([ 5, 5 ], 0) };
-    public static SKPaint AltPathLine { get; } = new SKPaint { Color = SKColors.Yellow.WithAlpha(70), IsStroke = true, PathEffect = SKPathEffect.CreateDash([ 5, 5 ], 0) };
     public static SKPaint Human { get; } = new SKPaint { Color = SKColors.LightGreen };
     public static SKPaint Obstacle { get; } = new SKPaint { Color = SKColors.Brown };
     public static SKPaint Area { get; } = new SKPaint { Color = SKColors.White.WithAlpha(70) };
@@ -26,8 +24,6 @@ public static class Brushes
     public static SKPaint Visor { get; } = new SKPaint { Color = new SKColor(0xEE, 0x33, 0x33), IsStroke = true, PathEffect = SKPathEffect.CreateDash([ 5, 5 ], 0) };
 
     public static SKPaint SelectedLine { get; } = ApplySelection(Line);
-    public static SKPaint SelectedMainPathLine { get; } = ApplySelection(MainPathLine);
-    public static SKPaint SelectedAltPathLine { get; } = ApplySelection(AltPathLine);
     public static SKPaint SelectedHuman { get; } = ApplySelection(Human);
     public static SKPaint SelectedObstacle { get; } = ApplySelection(Obstacle);
 
