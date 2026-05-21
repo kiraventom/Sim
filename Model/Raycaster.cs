@@ -1,13 +1,14 @@
 using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using Sim.Model.Objects;
+using System;
 using System.Collections.Generic;
 
 namespace Sim.Model;
 
 internal class Raycaster
 {
-    public const double STEP = 0.00001;
+    public const double STEP = 0.0001;
 
     private ILogger<Raycaster> Logger { get; }
     private World World { get; }
@@ -42,10 +43,11 @@ internal class Raycaster
 
         CurrentRect = new Rect(start, Size);
 
-        while (dist <= rayLength)
+        while (dist < rayLength)
         {
-            CurrentRect = CurrentRect.Offset(dir * STEP);
-            dist += STEP;
+            var moveDist = Math.Min(STEP, rayLength - dist);
+            CurrentRect = CurrentRect.Offset(dir * moveDist);
+            dist += moveDist;
 
             if (!CurrentRect.Pos.IsOnMap())
                 break;

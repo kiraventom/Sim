@@ -1,2 +1,3 @@
-- fix every-frame path rebuild when two movables move in parallel
+- fix stackoverflow
+- fix humans freezing in packs (widen intersection radius?)
 - optimize

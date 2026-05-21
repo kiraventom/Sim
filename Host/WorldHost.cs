@@ -45,7 +45,14 @@ internal class WorldHost(ILogger<WorldHost> logger, World world, Map map, IdCont
 
     public string GetInfo(int id) => infoBuilder.Build(world.Objects.GetValueOrDefault(id));
 
-    public string GetWorldInfo() => $"Current sim speed: {(1.0 / SpeedMod):0.##}x ({Interval} ms)";
+    public string GetWorldInfo()
+    {
+return
+    $"""
+    Is paused: {_isPaused}
+    Current sim speed: {(1.0 / SpeedMod):0.##}x ({Interval} ms)
+    """;
+    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

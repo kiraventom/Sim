@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Sim.Model;
@@ -19,10 +18,13 @@ internal class Intersection
 
     public static int CalcHash(IEnumerable<int> ids)
     {
-        var hash = new HashCode();
-        foreach (var id in ids.OrderBy(x => x))
-            hash.Add(id);
-        return hash.ToHashCode();
+        int hash = 0;
+        foreach (var id in ids)
+        {
+            hash += id.GetHashCode();
+        }
+
+        return hash;
     }
 }
 
