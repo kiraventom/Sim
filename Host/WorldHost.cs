@@ -13,7 +13,8 @@ namespace Sim.Host;
 
 internal class WorldHost(ILogger<WorldHost> logger, World world, Map map, IdContainer idContainer, EntityCache cache, ObjectInfoBuilder infoBuilder, WorldSettings settings, HumanFactory humanFactory, ObstacleFactory obstacleFactory) : BackgroundService, IWorldHost
 {
-    private const int INTERVAL = (int)(1000.0 / 60);
+    private double SpeedMod = 1.0;
+    private int Interval => (int)((1000.0 * SpeedMod) / 60);
 
     private bool _isPaused = false;
     private int _selectedIndex = -1;
@@ -44,16 +45,20 @@ internal class WorldHost(ILogger<WorldHost> logger, World world, Map map, IdCont
 
     public string GetInfo(int id) => infoBuilder.Build(world.Objects.GetValueOrDefault(id));
 
+    public string GetWorldInfo() => $"Current sim speed: {(1.0 / SpeedMod):0.##}x ({Interval} ms)";
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         PlaceObjects();
 
-        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(INTERVAL));
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(Interval));
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             if (!_isPaused)
                 world.Tick();
+
+            timer.Period = TimeSpan.FromMilliseconds(int.Max(1, Interval));
         }
     }
 
@@ -94,5 +99,28 @@ internal class WorldHost(ILogger<WorldHost> logger, World world, Map map, IdCont
     public void UnselectObject()
     {
         _selectedIndex = -1;
+    }
+
+    public void SpeedUp()
+    {
+        var speedMod = SpeedMod * 0.5;
+        if (speedMod < 0.05)
+            SpeedMod = 0.05;
+        else
+            SpeedMod = speedMod;
+    }
+
+    public void SlowDown()
+    {
+        var speedMod = SpeedMod * 2;
+        if (speedMod > 50)
+            SpeedMod = 50;
+        else
+            SpeedMod = speedMod;
+    }
+
+    public void ResetSpeed()
+    {
+        SpeedMod = 1.0;
     }
 }

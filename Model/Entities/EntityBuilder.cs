@@ -1,11 +1,32 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using Sim.Model.Objects;
 
 namespace Sim.Model.Entities;
 
-internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map, MovableDetector detector)
+internal class EntityBuilder
 {
+    private readonly ILogger<EntityBuilder> logger;
+    private readonly WorldSettings settings;
+    private readonly World world;
+    private readonly Map map;
+    private readonly MovableDetector detector;
+    private readonly HashSet<int> _builtPaths = [];
+    private readonly HashSet<int> _frozen = [];
+
+    public EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map, MovableDetector detector, MovableEvader evader)
+    {
+        this.logger = logger;
+        this.settings = settings;
+        this.world = world;
+        this.map = map;
+        this.detector = detector;
+
+        evader.PathBuilt += i => _builtPaths.Add(i);
+        evader.Frozen += i => _frozen.Add(i);
+    }
+
     public EntitySnapshot UpdateSnapshot(EntitySnapshot snapshot)
     {
         snapshot.Clear();
@@ -41,12 +62,17 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
             AddAreas(snapshot, id, rect);
         }
 
+        _builtPaths.Clear();
+        _frozen.Clear();
         return snapshot;
     }
 
     private void AddPath(EntitySnapshot snapshot, int id, Path path)
     {
         var node = path.StartNode;
+        var pathRebuilt = _builtPaths.Contains(id);
+        var frozen = _frozen.Contains(id);
+
         while (true)
         {
             var nextNode = node.Next;
@@ -55,7 +81,7 @@ internal class EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settin
 
             var pointA = node.Value.ToEntityPoint(settings);
             var pointB = nextNode.Value.ToEntityPoint(settings);
-            snapshot.Add(new LineEntity(id, pointA, pointB));
+            snapshot.Add(new PathPartEntity(id, pointA, pointB, pathRebuilt, frozen));
             node = node.Next;
         }
     }

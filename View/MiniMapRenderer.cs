@@ -1,11 +1,11 @@
-using SkiaSharp;
+﻿using SkiaSharp;
 
 namespace Sim.View;
 
 public class MiniMapRenderer : Renderer
 {
     protected override int FPS => 15;
-    protected override bool DrawLines => false;
+    protected override bool DrawPaths => false;
 
     public MiniMapRenderer(int width, int height, double dpiScale, ZoomCalculator zoomCalc, PanCalculator panCalc) : base(width, height, dpiScale, zoomCalc, panCalc)
     {

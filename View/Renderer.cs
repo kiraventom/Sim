@@ -22,7 +22,7 @@ public abstract class Renderer
     public Func<int> GetSelectedObjectId { get; init; } = () => -1;
 
     protected Point RenderScale = new Point(1.0, 1.0);
-    protected virtual bool DrawLines { get; private set; } = true;
+    protected virtual bool DrawPaths { get; private set; } = true;
 
     public int Width { get; }
     public int Height { get; }
@@ -48,7 +48,7 @@ public abstract class Renderer
 
     public void SetRenderScale(Point renderScale) => RenderScale = renderScale;
 
-    public void ToggleLines() => DrawLines = !DrawLines;
+    public void ToggleLines() => DrawPaths = !DrawPaths;
 
     protected virtual void DrawInternal(SKCanvas canvas)
     {
@@ -109,15 +109,17 @@ public abstract class Renderer
                 DrawInfo(canvas, rect, entity.ObjectId);
         }
 
-        if (DrawLines)
+        if (DrawPaths)
         {
-            foreach (var entity in _snapshot.Lines)
+            foreach (var entity in _snapshot.PathParts)
             {
                 var isSelected = entity.ObjectId == selectedObjectId;
                 var brush = entity switch
                 {
-                    {} when isSelected => Brushes.SelectedLine,
-                    _ => Brushes.Line
+                    PathPartEntity p when p.IsRebuilt == true => Brushes.RebuiltPath,
+                    PathPartEntity p when p.IsFrozen == true => Brushes.FrozenPath,
+                    {} when isSelected => Brushes.SelectedPath,
+                    _ => Brushes.Path
                 };
 
                 var points = ToSKPoints(entity.A, entity.B);

@@ -24,7 +24,7 @@ internal abstract class Movable : SimObject
         UpdatePath(pos);
         var offset = GetDirectMoveOffset(pos, Path.TargetPoint);
 
-        var action = Evader.Evade(Id);
+        var action = Evader.GetNewAction(Id);
         switch (action)
         {
             case MovableAction.BuildPath:

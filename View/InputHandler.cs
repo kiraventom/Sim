@@ -62,6 +62,18 @@ public class InputHandler(MainWindow window, IWorldHost worldHost, MapRenderer r
             case Key.P:
                 renderer.ToggleLines();
                 return;
+
+            case Key.OemMinus:
+                worldHost.SlowDown();
+                return;
+
+            case Key.OemPlus when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
+                worldHost.SpeedUp();
+                return;
+
+            case Key.OemPlus:
+                worldHost.ResetSpeed();
+                return;
         }
     }
 }

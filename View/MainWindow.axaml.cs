@@ -47,14 +47,26 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    Dispatcher.Invoke(() => InfoText.Text = worldHost.GetInfo(worldHost.SelectedObjectId));
+                    Dispatcher.Invoke(() => ObjectInfoText.Text = worldHost.GetInfo(worldHost.SelectedObjectId));
                 }
                 catch (TaskCanceledException)
                 {
                 }
                 catch (Exception e)
                 {
-                    Dispatcher.Invoke(() => InfoText.Text = e.ToString());
+                    Dispatcher.Invoke(() => ObjectInfoText.Text = "error");
+                }
+
+                try
+                {
+                    Dispatcher.Invoke(() => WorldInfoText.Text = worldHost.GetWorldInfo());
+                }
+                catch (TaskCanceledException)
+                {
+                }
+                catch (Exception e)
+                {
+                    Dispatcher.Invoke(() => WorldInfoText.Text = "error");
                 }
 
                 await Task.Delay(100, cts.Token);

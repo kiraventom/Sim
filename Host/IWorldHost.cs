@@ -13,8 +13,13 @@ public interface IWorldHost
     void SelectPrevObject();
 
     string GetInfo(int id);
+    string GetWorldInfo();
 
     void TogglePause();
+
+    void SpeedUp();
+    void SlowDown();
+    void ResetSpeed();
     
     void UpdateSnapshot(EntitySnapshot snapshot);
     void UnselectObject();
