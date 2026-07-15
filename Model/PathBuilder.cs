@@ -25,11 +25,6 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, RaycasterFactor
 
     private bool SplitLine(Path path, LinkedListNode<Point> start, LinkedListNode<Point> end, int depth = 0)
     {
-        // TODO Find out the reason for stackoverflow
-        // TODO --humans 50 --obstacles 0 --width 1000 --height 1000 --seed 3034405
-        /* if (depth > 20) */
-        /*     return false; */
-
         var raycaster = raycasterFactory.Build(movableId);
         var result = raycaster.Cast(start.Value, end.Value, ignoreMovables: false);
         if (!result.HasHit())
@@ -39,9 +34,9 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, RaycasterFactor
         var evadePoint = GetEvadePoint(objRect, result.Hit);
 
         Point point;
-        if (!CMP.Equals(start.Value, evadePoint.Main) && !CMP.Equals(end.Value, evadePoint.Main) && CheckPoint(evadePoint.Main))
+        if (!IsPointInPath(path, evadePoint.Main) && CheckPoint(evadePoint.Main))
             point = evadePoint.Main;
-        else if (!CMP.Equals(start.Value, evadePoint.Alt) && !CMP.Equals(end.Value, evadePoint.Alt) && CheckPoint(evadePoint.Alt))
+        else if (!IsPointInPath(path, evadePoint.Alt) && CheckPoint(evadePoint.Alt))
             point = evadePoint.Alt;
         else
             point = Point.INVALID;
@@ -124,6 +119,18 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, RaycasterFactor
         }
 
         return new EvadePoint(Point.INVALID, Point.INVALID);
+    }
+
+    private bool IsPointInPath(Path path, Point point)
+    {
+        var node = path.StartNode;
+        while (node != null)
+        {
+            if (CMP.Equals(node.Value, point))
+                return true;
+            node = node.Next;
+        }
+        return false;
     }
 
     private struct EvadePoint(Point main, Point alt)

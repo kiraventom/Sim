@@ -1,3 +1,2 @@
-- fix stackoverflow
 - fix humans freezing in packs (widen intersection radius?)
 - optimize
