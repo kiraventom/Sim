@@ -11,7 +11,7 @@ using Sim.Model.Objects;
 
 namespace Sim.Host;
 
-internal class WorldHost(ILogger<WorldHost> logger, World world, Map map, IdContainer idContainer, EntityCache cache, ObjectInfoBuilder infoBuilder, WorldSettings settings, HumanFactory humanFactory, ObstacleFactory obstacleFactory) : BackgroundService, IWorldHost
+internal class WorldHost(ILogger<WorldHost> logger, World world, Map map, IdContainer idContainer, EntityCache cache, ObjectInfoBuilder infoBuilder, WorldSettings settings, HumanFactory humanFactory, ObstacleFactory obstacleFactory, BuildingFactory buildingFactory) : BackgroundService, IWorldHost
 {
     private double SpeedMod = 1.0;
     private int Interval => (int)((1000.0 * SpeedMod) / 60);
@@ -100,7 +100,13 @@ return
             yield return obstacleFactory.Build();
 
         for (int i = 0; i < settings.HumansCount; ++i)
-            yield return humanFactory.Build();
+        {
+            var human = humanFactory.Build();
+            var house = buildingFactory.BuildHouse();
+            house.AssignOwner(human);
+            yield return house;
+            yield return human;
+        }
     }
 
     public void UnselectObject()

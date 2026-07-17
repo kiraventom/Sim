@@ -5,12 +5,13 @@ namespace Sim.Model.Objects;
 
 internal class Obstacle : SimObject
 {
-    public override Size Size { get; }
+    public Obstacle(int id) : base(id, GenSize())
+    {
+    }
 
-    public Obstacle(int id) : base(id)
+    private static Size GenSize()
     {
         var size = RND.Double(0.1, 0.3);
-        Size = new Size(size, size);
+        return new Size(size, size);
     }
 }
-

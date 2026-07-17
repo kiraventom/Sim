@@ -21,6 +21,7 @@ public static class Brushes
     public static SKPaint FrozenPath { get; } = new SKPaint { Color = SKColors.SteelBlue, IsStroke = true };
     public static SKPaint Human { get; } = new SKPaint { Color = SKColors.LightGreen };
     public static SKPaint Obstacle { get; } = new SKPaint { Color = SKColors.Brown };
+    public static SKPaint Building { get; } = new SKPaint { Color = SKColors.Azure };
     public static SKPaint Area { get; } = new SKPaint { Color = SKColors.White.WithAlpha(70) };
     public static SKPaint Background { get; } = new SKPaint { Color = new SKColor(0x22, 0x22, 0x22) };
     public static SKPaint Visor { get; } = new SKPaint { Color = new SKColor(0xEE, 0x33, 0x33), IsStroke = true, PathEffect = SKPathEffect.CreateDash([ 5, 5 ], 0) };
@@ -28,6 +29,7 @@ public static class Brushes
     public static SKPaint SelectedPath { get; } = ApplySelection(Path);
     public static SKPaint SelectedHuman { get; } = ApplySelection(Human);
     public static SKPaint SelectedObstacle { get; } = ApplySelection(Obstacle);
+    public static SKPaint SelectedBuilding { get; } = ApplySelection(Building);
 
     public static SKPaint ChangeColor(SKPaint paint, SKColor color)
     {

@@ -9,7 +9,7 @@ internal abstract class Movable : SimObject
 
     public override bool HasCollision { get; } = false;
 
-    public Movable(RaycasterFactory raycasterFactory, PathBuilderFactory pathBuilderFactory, int id) : base(id)
+    public Movable(RaycasterFactory raycasterFactory, PathBuilderFactory pathBuilderFactory, int id, Size size) : base(id, size)
     {
         RaycasterFactory = raycasterFactory;
         PathBuilder = pathBuilderFactory.Build(Id, Size, raycasterFactory);

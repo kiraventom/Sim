@@ -98,6 +98,7 @@ public class HostBuilder
             .AddSingleton<IdContainer>()
             .AddSingleton<HumanFactory>()
             .AddSingleton<ObstacleFactory>()
+            .AddSingleton<BuildingFactory>()
             .AddHostedService<WorldHost>();
 
         var host = _builder.Build();

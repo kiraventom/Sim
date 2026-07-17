@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Sim.Geometry;
 using Sim.Model.Objects;
+using Sim.Model.Objects.Buildings;
 
 namespace Sim.Model.Entities;
 
@@ -47,6 +48,14 @@ internal class EntityBuilder
 
                 case Obstacle o:
                     snapshot.Add(new ObstacleEntity(o.Id, absRect));
+                    break;
+
+                case House house:
+                    snapshot.Add(new BuildingEntity(house.Id, absRect, BuildingType.House));
+                    break;
+
+                case Workplace workplace:
+                    snapshot.Add(new BuildingEntity(workplace.Id, absRect, BuildingType.Workplace));
                     break;
             }
 

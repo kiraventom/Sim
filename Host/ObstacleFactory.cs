@@ -6,4 +6,3 @@ internal class ObstacleFactory(IdContainer idContainer)
 {
     public Obstacle Build() => new Obstacle(idContainer.NewId());
 }
-
