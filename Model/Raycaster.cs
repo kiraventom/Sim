@@ -30,7 +30,7 @@ internal class Raycaster
         Size = map[Id].Size;
     }
 
-    public RaycastResult Cast(Point start, Point target, bool ignoreMovables = true)
+    public RaycastResult Cast(Point start, Point target)
     {
         var ray = target - start;
         var rayLength = ray.Length;
@@ -52,14 +52,14 @@ internal class Raycaster
             if (!CurrentRect.Pos.IsOnMap())
                 break;
 
-            if (RegisterHit(ignoreMovables, out var hit))
+            if (RegisterHit(out var hit))
                 return new RaycastResult(hit);
         }
 
         return RaycastResult.NO_HITS;
     }
 
-    private bool RegisterHit(bool ignoreMovables, out RaycastHit hit)
+    private bool RegisterHit(out RaycastHit hit)
     {
         var grid = Map.GetAreaGrid(CurrentRect);
         if (grid != _grid)
@@ -75,7 +75,7 @@ internal class Raycaster
                 if (id == Id)
                     continue;
 
-                if (ignoreMovables && World.Objects[id] is Movable)
+                if (!World.Objects[id].HasCollision)
                     continue;
 
                 var objectRect = Map[id];

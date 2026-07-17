@@ -10,10 +10,11 @@ internal class Map
     public const int AREAS_COUNT = 15;
 
     private readonly Dictionary<int, Rect> _rects = [];
-
     private readonly Area[,] _areas = new Area[AREAS_COUNT, AREAS_COUNT];
 
     private ILogger<Map> Logger { get; }
+
+    public Func<int, bool> HasCollision { get; set; } = _ => true;
 
     public Rect this[int id] => Rects.TryGetValue(id, out var rect) ? rect : Rect.INVALID;
 
@@ -83,7 +84,6 @@ internal class Map
 
         Logger.LogTrace("Changed {Id} pos from {Old} to {New}, {Offset}", id, oldRect.Pos, newRect.Pos, offset);
 
-        // TODO: move those to RectI
         for (int r = oldGrid.Top; r <= oldGrid.Bottom; ++r)
         {
             for (int c = oldGrid.Left; c <= oldGrid.Right; ++c)
@@ -96,7 +96,6 @@ internal class Map
 
         _rects[id] = newRect;
 
-        // TODO: move those to RectI
         for (int r = newGrid.Top; r <= newGrid.Bottom; ++r)
         {
             for (int c = newGrid.Left; c <= newGrid.Right; ++c)
@@ -138,6 +137,9 @@ internal class Map
             foreach (var existingId in area.ObjectIds)
             {
                 if (id.HasValue && id.Value == existingId)
+                    continue;
+
+                if (!HasCollision(existingId))
                     continue;
 
                 if (_rects[existingId].Intersects(rect))

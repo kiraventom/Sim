@@ -26,7 +26,7 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, RaycasterFactor
     private bool SplitLine(Path path, LinkedListNode<Point> start, LinkedListNode<Point> end, int depth = 0)
     {
         var raycaster = raycasterFactory.Build(movableId);
-        var result = raycaster.Cast(start.Value, end.Value, ignoreMovables: false);
+        var result = raycaster.Cast(start.Value, end.Value);
         if (!result.HasHit())
             return true;
 
@@ -64,7 +64,7 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, RaycasterFactor
         while (otherNode != null)
         {
             var raycaster = raycasterFactory.Build(movableId);
-            var result = raycaster.Cast(node.Value, otherNode.Value, ignoreMovables: false);
+            var result = raycaster.Cast(node.Value, otherNode.Value);
             if (!result.HasHit())
             {
                 while (node.Next != otherNode)

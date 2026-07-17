@@ -5,9 +5,19 @@ using System.Collections.Generic;
 
 namespace Sim.Model;
 
-internal class World(ILogger<World> logger, Map map)
+internal class World
 {
     private readonly Dictionary<int, SimObject> _objects = [];
+
+    public World(ILogger<World> logger, Map map)
+    {
+        Logger = logger;
+        Map = map;
+        Map.HasCollision = id => _objects.TryGetValue(id, out var obj) && obj.HasCollision;
+    }
+
+    public ILogger<World> Logger { get; }
+    public Map Map { get; }
 
     internal IReadOnlyDictionary<int, SimObject> Objects => _objects;
 
@@ -19,10 +29,10 @@ internal class World(ILogger<World> logger, Map map)
         {
             if (obj is Movable movable)
             {
-                var pos = map[movable.Id].Pos;
+                var pos = Map[movable.Id].Pos;
                 var moveOffset = movable.GetMoveOffset(pos);
-                if (!map.TryMove(movable.Id, moveOffset))
-                    logger.LogWarning("Failed to move {Id}, skipping", obj.Id);
+                if (!Map.TryMove(movable.Id, moveOffset))
+                    Logger.LogWarning("Failed to move {Id}, skipping", obj.Id);
             }
         }
 

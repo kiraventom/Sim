@@ -11,20 +11,13 @@ internal class EntityBuilder
     private readonly WorldSettings settings;
     private readonly World world;
     private readonly Map map;
-    private readonly MovableDetector detector;
-    private readonly HashSet<int> _builtPaths = [];
-    private readonly HashSet<int> _frozen = [];
 
-    public EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map, MovableDetector detector, MovableEvader evader)
+    public EntityBuilder(ILogger<EntityBuilder> logger, WorldSettings settings, World world, Map map)
     {
         this.logger = logger;
         this.settings = settings;
         this.world = world;
         this.map = map;
-        this.detector = detector;
-
-        evader.PathBuilt += i => _builtPaths.Add(i);
-        evader.Frozen += i => _frozen.Add(i);
     }
 
     public EntitySnapshot UpdateSnapshot(EntitySnapshot snapshot)
@@ -46,12 +39,10 @@ internal class EntityBuilder
                 case Human human when human.Path is Path path:
                     snapshot.Add(new HumanEntity(human.Id, absRect));
                     AddPath(snapshot, id, path);
-                    snapshot.Add(new DetectionDistEntity(human.Id, detector.GetDetectionRect(human).ToEntityRect(settings)));
                     break;
 
                 case Human h:
                     snapshot.Add(new HumanEntity(h.Id, absRect));
-                    snapshot.Add(new DetectionDistEntity(h.Id, detector.GetDetectionRect(h).ToEntityRect(settings)));
                     break;
 
                 case Obstacle o:
@@ -62,16 +53,12 @@ internal class EntityBuilder
             AddAreas(snapshot, id, rect);
         }
 
-        _builtPaths.Clear();
-        _frozen.Clear();
         return snapshot;
     }
 
     private void AddPath(EntitySnapshot snapshot, int id, Path path)
     {
         var node = path.StartNode;
-        var pathRebuilt = _builtPaths.Contains(id);
-        var frozen = _frozen.Contains(id);
 
         while (true)
         {
@@ -81,7 +68,7 @@ internal class EntityBuilder
 
             var pointA = node.Value.ToEntityPoint(settings);
             var pointB = nextNode.Value.ToEntityPoint(settings);
-            snapshot.Add(new PathPartEntity(id, pointA, pointB, pathRebuilt, frozen));
+            snapshot.Add(new PathPartEntity(id, pointA, pointB, false, false));
             node = node.Next;
         }
     }

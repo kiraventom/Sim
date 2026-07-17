@@ -90,8 +90,6 @@ public class HostBuilder
             .AddSingleton<WorldSettings>(_settings)
             .AddSingleton<Map>()
             .AddSingleton<World>()
-            .AddSingleton<MovableDetector>()
-            .AddSingleton<MovableEvader>()
             .AddSingleton<RaycasterFactory>()
             .AddSingleton<PathBuilderFactory>()
             .AddSingleton<ObjectInfoBuilder>()

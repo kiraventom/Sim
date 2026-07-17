@@ -153,19 +153,6 @@ public abstract class Renderer
             if (isSelected)
                 DrawInfo(canvas, rect, entity.ObjectId);
         }
-
-        foreach (var entity in _snapshot.DetectionDists)
-        {
-            var isSelected = entity.ObjectId == selectedObjectId;
-            if (!isSelected)
-                continue;
-
-            var brush = Brushes.Visor;
-
-            var rect = ToSKRect(entity.Rect);
-            ApplyRenderScale(ref rect);
-            DrawRect(canvas, ref rect, brush);
-        }
     }
 
     protected virtual void DrawInfo(SKCanvas canvas, SKRect rect, int objectId)

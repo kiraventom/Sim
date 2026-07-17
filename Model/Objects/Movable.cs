@@ -4,13 +4,13 @@ namespace Sim.Model.Objects;
 
 internal abstract class Movable : SimObject
 {
-    private MovableEvader Evader { get; }
     private PathBuilder PathBuilder { get; }
     private RaycasterFactory RaycasterFactory { get; }
 
-    public Movable(MovableEvader movableEvader, RaycasterFactory raycasterFactory, PathBuilderFactory pathBuilderFactory, int id) : base(id)
+    public override bool HasCollision { get; } = false;
+
+    public Movable(RaycasterFactory raycasterFactory, PathBuilderFactory pathBuilderFactory, int id) : base(id)
     {
-        Evader = movableEvader;
         RaycasterFactory = raycasterFactory;
         PathBuilder = pathBuilderFactory.Build(Id, Size, raycasterFactory);
     }
@@ -22,28 +22,7 @@ internal abstract class Movable : SimObject
     public Point GetMoveOffset(Point pos)
     {
         UpdatePath(pos);
-        var offset = GetDirectMoveOffset(pos, Path.TargetPoint);
-
-        var action = Evader.GetNewAction(Id);
-        switch (action)
-        {
-            case MovableAction.BuildPath:
-                if (PathBuilder.TryBuildPath(pos, Path.End, out var path))
-                {
-                    Path = path;
-                    Evader.NotifyPathBuilt(Id);
-                    return GetDirectMoveOffset(pos, Path.TargetPoint);
-                }
-                break;
-
-            case MovableAction.Freeze:
-                return Point.ZERO;
-
-            case MovableAction.Continue:
-                return offset;
-        }
-
-        return offset;
+        return GetDirectMoveOffset(pos, Path.TargetPoint);
     }
 
     internal Point GetDirectMoveOffset(Point pos, Point targetPos)
@@ -70,7 +49,6 @@ internal abstract class Movable : SimObject
 
         Path = null;
 
-        // TODO: More complex logic in case of failing to build path
         while (Path is null)
         {
             var target = GetNewTarget(pos);

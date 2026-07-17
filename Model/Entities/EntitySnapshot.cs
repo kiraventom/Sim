@@ -6,18 +6,15 @@ public class EntitySnapshot
 {
     private readonly List<AreaEntity> _areas = new();
     private readonly List<ObstacleEntity> _obstacles = new();
-    private readonly List<DetectionDistEntity> _detectionDists = new();
     private readonly List<PathPartEntity> _pathParts = new();
     private readonly List<HumanEntity> _humans = new();
 
     public IReadOnlyList<AreaEntity> Areas => _areas;
     public IReadOnlyList<ObstacleEntity> Obstacles => _obstacles;
-    public IReadOnlyList<DetectionDistEntity> DetectionDists => _detectionDists;
     public IReadOnlyList<PathPartEntity> PathParts => _pathParts;
     public IReadOnlyList<HumanEntity> Humans => _humans;
 
     internal void Add(ObstacleEntity obstacle) => _obstacles.Add(obstacle);
-    internal void Add(DetectionDistEntity detectionDist) => _detectionDists.Add(detectionDist);
     internal void Add(AreaEntity area) => _areas.Add(area);
     internal void Add(PathPartEntity line) => _pathParts.Add(line);
     internal void Add(HumanEntity human) => _humans.Add(human);
@@ -26,7 +23,6 @@ public class EntitySnapshot
     {
         _areas.Clear();
         _obstacles.Clear();
-        _detectionDists.Clear();
         _pathParts.Clear();
         _humans.Clear();
     }
@@ -37,7 +33,6 @@ public class EntitySnapshot
 
         _areas.AddRange(source.Areas);
         _obstacles.AddRange(source.Obstacles);
-        _detectionDists.AddRange(source.DetectionDists);
         _pathParts.AddRange(source.PathParts);
         _humans.AddRange(source.Humans);
     }

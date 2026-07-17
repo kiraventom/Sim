@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
-using Sim.Geometry;
+﻿using Sim.Geometry;
 
 namespace Sim.Host;
 
-internal readonly struct HumanInfo(int id, RectI rect, double speed, PointI initialPos, PointI targetPos, IReadOnlyList<int> detectedIds) : IObjectInfo
+internal readonly struct HumanInfo(int id, RectI rect, double speed, PointI initialPos, PointI targetPos) : IObjectInfo
 {
     public string Text { get; } =
     $"""
@@ -13,10 +12,5 @@ internal readonly struct HumanInfo(int id, RectI rect, double speed, PointI init
     Speed: {speed}
     From: {initialPos}
     To: {targetPos}
-    Detected: [{string.Join(", ", detectedIds)}]
     """;
 }
-
-    // Path: [ {string.Join(" -> ", path)} ]
-
-

@@ -6,5 +6,6 @@ internal abstract class SimObject(int id)
 {
     public int Id { get; } = id;
     public virtual Size Size { get; } = new Size(0.01, 0.01);
+    public virtual bool HasCollision => true;
 }
 

@@ -9,7 +9,7 @@ internal class Human : Movable
 
     public override Size Size => new Size(0.005, 0.005);
 
-    public Human(Map map, MovableEvader movableEvader, RaycasterFactory raycasterFactory, PathBuilderFactory pathBuilderFactory, int id) : base(movableEvader, raycasterFactory, pathBuilderFactory, id)
+    public Human(Map map, RaycasterFactory raycasterFactory, PathBuilderFactory pathBuilderFactory, int id) : base(raycasterFactory, pathBuilderFactory, id)
     {
         const double SpeedModMin = 0.0015;
         const double SpeedModMax = 0.003;
@@ -20,7 +20,6 @@ internal class Human : Movable
 
     protected override Point GetNewTarget(Point pos)
     {
-        // TEMP
         return Map.RandomFreeRect(Size).Pos;
     }
 }
