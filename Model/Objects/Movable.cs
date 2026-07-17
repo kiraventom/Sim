@@ -1,4 +1,5 @@
 ﻿using Sim.Geometry;
+using Sim.Utils;
 
 namespace Sim.Model.Objects;
 
@@ -22,6 +23,9 @@ internal abstract class Movable : SimObject
     public Point GetMoveOffset(Point pos)
     {
         UpdatePath(pos);
+        if (Path is null)
+            return Point.ZERO;
+
         return GetDirectMoveOffset(pos, Path.TargetPoint);
     }
 
@@ -38,7 +42,7 @@ internal abstract class Movable : SimObject
         return offset;
     }
 
-    protected abstract Point GetNewTarget(Point pos);
+    protected abstract Point GetNewTarget();
 
     private void UpdatePath(Point pos)
     {
@@ -51,7 +55,10 @@ internal abstract class Movable : SimObject
 
         while (Path is null)
         {
-            var target = GetNewTarget(pos);
+            var target = GetNewTarget();
+            if (CMP.Equals(pos, target))
+                return;
+
             var pathBuilt = PathBuilder.TryBuildPath(pos, target, out var path);
             if (pathBuilt)
                 Path = path;

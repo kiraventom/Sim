@@ -75,7 +75,7 @@ return
 
         foreach (var obj in objs)
         {
-            var rect = map.RandomFreeRect(obj.Size);
+            var rect = obj.RandStartRect(map);
             if (rect.IsInvalid())
             {
                 logger.LogError("Failed to find free rect for size {Size}, skipping", obj.Size);

@@ -7,6 +7,7 @@ using static System.Environment;
 using Sim.Model;
 using Sim.Model.Entities;
 using Sim.Utils;
+using Sim.Model.Objects;
 
 namespace Sim.Host;
 
@@ -58,9 +59,9 @@ public class HostBuilder
         _builder.Services.AddSerilog((sp, l) =>
         {
             var paths = sp.GetRequiredService<Paths>();
-            var logsDirPath = Path.Combine(paths.DataDir, "logs");
+            var logsDirPath = System.IO.Path.Combine(paths.DataDir, "logs");
             Directory.CreateDirectory(logsDirPath);
-            var logFilePath = Path.Combine(logsDirPath, $"{PROJECT_NAME}.log");
+            var logFilePath = System.IO.Path.Combine(logsDirPath, $"{PROJECT_NAME}.log");
 
             l.MinimumLevel.Information()
                 .WriteTo.Console()
@@ -75,8 +76,8 @@ public class HostBuilder
         var appData = Environment.GetFolderPath(SpecialFolder.ApplicationData);
         var localAppData = Environment.GetFolderPath(SpecialFolder.LocalApplicationData);
 
-        var configDirPath = Path.Combine(appData, PROJECT_NAME);
-        var dataDirPath = Path.Combine(localAppData, PROJECT_NAME);
+        var configDirPath = System.IO.Path.Combine(appData, PROJECT_NAME);
+        var dataDirPath = System.IO.Path.Combine(localAppData, PROJECT_NAME);
 
         Directory.CreateDirectory(configDirPath);
         Directory.CreateDirectory(dataDirPath);
@@ -96,6 +97,7 @@ public class HostBuilder
             .AddSingleton<EntityBuilder>()
             .AddSingleton<EntityCache>()
             .AddSingleton<IdContainer>()
+            .AddSingleton<PlanFactory>()
             .AddSingleton<HumanFactory>()
             .AddSingleton<ObstacleFactory>()
             .AddSingleton<BuildingFactory>()

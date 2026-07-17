@@ -31,6 +31,9 @@ internal class PathBuilder(ILogger<PathBuilder> logger, Map map, RaycasterFactor
             return true;
 
         var objRect = map[result.Hit.Id];
+        if (objRect.Contains(end.Value))
+            return true;
+
         var evadePoint = GetEvadePoint(objRect, result.Hit);
 
         Point point;

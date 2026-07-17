@@ -8,7 +8,9 @@ internal abstract class SimObject(int id, Size size)
 
     public int Id { get; } = id;
     public Size Size { get; } = size;
-    public virtual bool HasCollision => true;
+    public virtual bool HasCollision => false; // TODO Remove collision altogether, it's useless
+
+    public virtual Rect RandStartRect(Map map) => map.RandomFreeRect(Size);
 
     protected bool IsSemaphoreSet() => _semaphore.IsSet(this);
     protected SemaphoreObject Semaphore() => _semaphore.SetOnce(this);

@@ -42,7 +42,7 @@ internal class EntityBuilder
                     AddPath(snapshot, id, path);
                     break;
 
-                case Human h:
+                case Human h when h is { IsOutside: true }:
                     snapshot.Add(new HumanEntity(h.Id, absRect));
                     break;
 
